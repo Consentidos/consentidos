@@ -1,9 +1,9 @@
 # ================================
-# Docker Compose para desarrollo completo
+# Docker Compose for complete development
 # ================================
 
 services:
-  # Aplicación Spring Boot
+  # Spring Boot Application
   app:
     build:
       context: .
@@ -11,13 +11,13 @@ services:
     ports:
       - "${APP_PORT:-8080}:8080"
     environment:
-      # Configuración de base de datos
+      # Database configuration
       SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
       SPRING_JPA_SHOW_SQL: ${SPRING_JPA_SHOW_SQL}
-      # Perfil activo
+      # Active profile
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
     depends_on:
       db:
@@ -26,7 +26,7 @@ services:
       - app-network
     restart: unless-stopped
 
-  # Base de datos PostgreSQL
+  # PostgreSQL Database
   db:
     image: postgres:15-alpine
     environment:
@@ -36,7 +36,7 @@ services:
     ports:
       - "${DB_PORT:-5432}:5432"
     volumes:
-      # Persistir datos
+      # Persist data
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
@@ -47,7 +47,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # Adminer - Interfaz web para gestionar la base de datos
+  # Adminer - Web interface for database management
   adminer:
     image: adminer:latest
     ports:
@@ -58,12 +58,12 @@ services:
       - app-network
     restart: unless-stopped
 
-# Volúmenes para persistir datos
+# Volumes to persist data
 volumes:
   postgres_data:
     driver: local
 
-# Red para comunicación entre servicios
+# Network for communication between services
 networks:
   app-network:
     driver: bridge
