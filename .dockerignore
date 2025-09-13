@@ -1,0 +1,54 @@
+# ================================
+# .dockerignore - Archivos a excluir del contexto de Docker
+# ================================
+
+# Directorios de build
+build/
+target/
+.gradle/
+
+# Archivos temporales y logs
+*.log
+*.tmp
+*.temp
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Documentación
+README.md
+*.md
+docs/
+
+# Archivos de configuración local
+.env
+.env.local
+application-local.properties
+
+# Node modules (si usas frontend)
+node_modules/
+npm-debug.log
+
+# Archivos de test
+coverage/
+test-results/
+
+# Archivos temporales de Gradle
+.gradle/
