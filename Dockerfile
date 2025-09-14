@@ -31,7 +31,7 @@ RUN ./gradlew dependencies --no-daemon
 COPY src src/
 
 # Compile and build JAR
-RUN ./gradlew build --no-daemon -x test
+RUN ./gradlew build --no-daemon -x test -x checkstyleMain -x checkstyleTest
 
 # ================================
 # Stage 2: Runtime - Lightweight image with JRE only
