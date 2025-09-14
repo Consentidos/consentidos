@@ -35,3 +35,13 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Variables de entorno y archivos sensibles ###
+.env
+.env.local
+.env.production
+.env.staging
+*.key
+*.pem
+secrets/
+config/secrets.yml
