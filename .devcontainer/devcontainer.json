@@ -1,0 +1,11 @@
+{
+  "name": "Consentidos Dev Container",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/java": {
+      "version": "17",
+      "installGradle": true
+    }
+  }
+}
+
