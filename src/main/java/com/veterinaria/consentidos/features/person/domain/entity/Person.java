@@ -14,6 +14,8 @@ import lombok.ToString;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+import static com.veterinaria.consentidos.features.person.domain.common.PersonValidationConstants.*;
+
 /**
  * Person entity representing a person in the veterinary system.
  * This entity stores basic personal information including identification details.
@@ -28,37 +30,37 @@ public class Person {
     private Long id;
 
     @Column(name = "sexo", nullable = false, length = 1)
-    @NotBlank(message = "Sex is required")
-    @Pattern(regexp = "^[MF]$", message = "Sex must be M or F")
+    @NotBlank(message = SEX_REQUIRED_MESSAGE)
+    @Pattern(regexp = SEX_PATTERN, message = SEX_PATTERN_MESSAGE)
     private String sex;
 
     @Column(name = "fecha_nacimiento", nullable = false)
-    @NotNull(message = "Birth date is required")
+    @NotNull(message = BIRTH_DATE_REQUIRED_MESSAGE)
     private LocalDateTime birthDate;
 
-    @Column(name = "nombres", nullable = false, length = 100)
-    @NotBlank(message = "First name is required")
-    @Size(max = 100, message = "First name must not exceed 100 characters")
+    @Column(name = "nombres", nullable = false, length = FIRST_NAME_MAX_LENGTH)
+    @NotBlank(message = FIRST_NAME_REQUIRED_MESSAGE)
+    @Size(max = FIRST_NAME_MAX_LENGTH, message = FIRST_NAME_SIZE_MESSAGE)
     private String firstName;
 
-    @Column(name = "apellidos", nullable = false, length = 100)
-    @NotBlank(message = "Last name is required")
-    @Size(max = 100, message = "Last name must not exceed 100 characters")
+    @Column(name = "apellidos", nullable = false, length = LAST_NAME_MAX_LENGTH)
+    @NotBlank(message = LAST_NAME_REQUIRED_MESSAGE)
+    @Size(max = LAST_NAME_MAX_LENGTH, message = LAST_NAME_SIZE_MESSAGE)
     private String lastName;
 
-    @Column(name = "documento", nullable = false, unique = true, length = 50)
-    @NotBlank(message = "Document is required")
-    @Size(max = 50, message = "Document must not exceed 50 characters")
+    @Column(name = "documento", nullable = false, unique = true, length = DOCUMENT_MAX_LENGTH)
+    @NotBlank(message = DOCUMENT_REQUIRED_MESSAGE)
+    @Size(max = DOCUMENT_MAX_LENGTH, message = DOCUMENT_SIZE_MESSAGE)
     private String document;
 
-    @Column(name = "tipo_documento", nullable = false, length = 20)
-    @NotBlank(message = "Document type is required")
-    @Size(max = 20, message = "Document type must not exceed 20 characters")
+    @Column(name = "tipo_documento", nullable = false, length = DOCUMENT_TYPE_MAX_LENGTH)
+    @NotBlank(message = DOCUMENT_TYPE_REQUIRED_MESSAGE)
+    @Size(max = DOCUMENT_TYPE_MAX_LENGTH, message = DOCUMENT_TYPE_SIZE_MESSAGE)
     private String documentType;
 
-    @Column(name = "ciudad", nullable = false, length = 100)
-    @NotBlank(message = "City is required")
-    @Size(max = 100, message = "City must not exceed 100 characters")
+    @Column(name = "ciudad", nullable = false, length = CITY_MAX_LENGTH)
+    @NotBlank(message = CITY_REQUIRED_MESSAGE)
+    @Size(max = CITY_MAX_LENGTH, message = CITY_SIZE_MESSAGE)
     private String city;
 
     // Default constructor for JPA

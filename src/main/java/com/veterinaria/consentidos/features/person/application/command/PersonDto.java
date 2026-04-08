@@ -5,8 +5,7 @@ import java.time.LocalDateTime;
 
 /**
  * Data Transfer Object for Person entity.
- * This class is used to transfer person data between layers
- * without exposing the internal structure of the domain entity.
+ * Contains all person data without validation constraints since it represents already validated data.
  */
 public class PersonDto {
 
