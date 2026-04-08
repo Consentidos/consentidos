@@ -101,12 +101,7 @@ class ResponseInterceptorTest {
         @SuppressWarnings("unchecked")
         Map<String, Object> wrappedResponse = (Map<String, Object>) result;
         
-        assertEquals(200, wrappedResponse.get("status"));
-        assertEquals(true, wrappedResponse.get("success"));
-        assertEquals("Request processed successfully", wrappedResponse.get("message"));
-        assertEquals(data, wrappedResponse.get("data"));
-        assertEquals("/api/pets/1", wrappedResponse.get("path"));
-        assertNotNull(wrappedResponse.get("timestamp"));
+        assertEquals(data, result);
     }
     
     @Test

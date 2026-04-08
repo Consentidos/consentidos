@@ -132,6 +132,7 @@ class PersonsTest {
         Person person = new Person();
         
         person.setId(1L);
+        person.setBirthDate(LocalDateTime.of(1990, 1, 15, 0, 0));
         person.setSex("M");
         person.setFirstName("Carlos");
         person.setLastName("Rodriguez");
@@ -140,6 +141,7 @@ class PersonsTest {
         person.setDocumentType("CC");
         
         assertEquals(1L, person.getId());
+        assertEquals(LocalDateTime.of(1990, 1, 15, 0, 0), person.getBirthDate());
         assertEquals("M", person.getSex());
         assertEquals("Carlos", person.getFirstName());
         assertEquals("Rodriguez", person.getLastName());
