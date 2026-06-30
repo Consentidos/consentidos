@@ -146,9 +146,9 @@ public class Person {
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
-        Person person = (Person) obj;
-        return document.equals(person.document) && documentType.equals(person.documentType);
+        if (!(obj instanceof Person person)) return false;
+        return Objects.equals(document, person.document)
+                && Objects.equals(documentType, person.documentType);
     }
 
     @Override
