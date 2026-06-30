@@ -10,7 +10,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import lombok.ToString;
+import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -22,7 +22,7 @@ import static com.veterinaria.consentidos.features.person.domain.common.PersonVa
  */
 @Entity
 @Table(name = "persons")
-@ToString(includeFieldNames = true)
+@Data
 public class Person {
 
     @Id
@@ -75,71 +75,6 @@ public class Person {
         this.lastName = lastName;
         this.document = document;
         this.documentType = documentType;
-        this.city = city;
-    }
-
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getSex() {
-        return sex;
-    }
-
-    public void setSex(String sex) {
-        this.sex = sex;
-    }
-
-    public LocalDateTime getBirthDate() {
-        return birthDate;
-    }
-
-    public void setBirthDate(LocalDateTime birthDate) {
-        this.birthDate = birthDate;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public String getDocument() {
-        return document;
-    }
-
-    public void setDocument(String document) {
-        this.document = document;
-    }
-
-    public String getDocumentType() {
-        return documentType;
-    }
-
-    public void setDocumentType(String documentType) {
-        this.documentType = documentType;
-    }
-
-    public String getCity() {
-        return city;
-    }
-
-    public void setCity(String city) {
         this.city = city;
     }
 

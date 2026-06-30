@@ -4,6 +4,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 import static com.veterinaria.consentidos.features.person.domain.common.PersonValidationConstants.*;
 
@@ -11,6 +14,9 @@ import static com.veterinaria.consentidos.features.person.domain.common.PersonVa
  * Base class for Person-related objects to avoid code duplication.
  * Contains common fields, validation annotations, and accessor methods.
  */
+@Getter
+@Setter
+@ToString
 public abstract class BasePersonData {
 
     @NotBlank(message = SEX_REQUIRED_MESSAGE)
@@ -50,70 +56,8 @@ public abstract class BasePersonData {
         this.documentType = documentType;
     }
 
-    // Common getters and setters
-    public String getSex() {
-        return sex;
-    }
-
-    public void setSex(String sex) {
-        this.sex = sex;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public String getCity() {
-        return city;
-    }
-
-    public void setCity(String city) {
-        this.city = city;
-    }
-
-    public String getDocument() {
-        return document;
-    }
-
-    public void setDocument(String document) {
-        this.document = document;
-    }
-
-    public String getDocumentType() {
-        return documentType;
-    }
-
-    public void setDocumentType(String documentType) {
-        this.documentType = documentType;
-    }
-
     // Utility method available to all subclasses
     public String getFullName() {
         return firstName + " " + lastName;
-    }
-
-    // Common toString implementation
-    @Override
-    public String toString() {
-        return getClass().getSimpleName() + "{" +
-                "sex='" + sex + '\'' +
-                ", firstName='" + firstName + '\'' +
-                ", lastName='" + lastName + '\'' +
-                ", city='" + city + '\'' +
-                ", document='" + document + '\'' +
-                ", documentType='" + documentType + '\'' +
-                '}';
     }
 }
