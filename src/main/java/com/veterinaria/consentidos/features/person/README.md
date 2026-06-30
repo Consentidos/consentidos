@@ -36,15 +36,16 @@ This feature follows the **Hexagonal Architecture** (Clean Architecture) pattern
 
 ## Person Entity Properties
 
-| Property       | Type   | Description                      | Constraints                         |
-| -------------- | ------ | -------------------------------- | ----------------------------------- |
-| `id`           | Long   | Auto-generated unique identifier | Primary key, auto-increment         |
-| `sex`          | String | Gender specification             | Required, must be "M" or "F"        |
-| `firstName`    | String | Person's first name              | Required, max 100 characters        |
-| `lastName`     | String | Person's last name               | Required, max 100 characters        |
-| `city`         | String | Person's city of residence       | Required, max 100 characters        |
-| `document`     | String | Identification document number   | Required, unique, max 50 characters |
-| `documentType` | String | Type of identification document  | Required, max 20 characters         |
+| Property       | Type   | Description                                          | Constraints                         |
+| -------------- | ------ | ---------------------------------------------------- | ----------------------------------- |
+| `id`           | Long   | Auto-generated unique identifier                     | Primary key, auto-increment         |
+| `sex`          | String | Gender specification (DB column: `sexo`)             | Required, must be "M" or "F"        |
+| `firstName`    | String | Person's first name (DB column: `nombres`)           | Required, max 100 characters        |
+| `lastName`     | String | Person's last name (DB column: `apellidos`)          | Required, max 100 characters        |
+| `birthDate`    | Date   | Person's birth date (DB column: `fecha_nacimiento`)  | Required, not null                  |
+| `city`         | String | Person's city of residence (DB column: `ciudad`)     | Required, max 100 characters        |
+| `document`     | String | Identification document number (DB column: `documento`) | Required, unique, max 50 characters |
+| `documentType` | String | Type of identification document (DB column: `tipo_documento`) | Required, max 20 characters |
 
 ## API Endpoints
 
@@ -98,6 +99,7 @@ This feature follows the **Hexagonal Architecture** (Clean Architecture) pattern
 POST /api/persons
 {
     "sex": "M",
+    "birthDate": "1990-01-15T00:00:00",
     "firstName": "John",
     "lastName": "Doe",
     "city": "Bogotá",
@@ -112,6 +114,7 @@ POST /api/persons
 {
   "id": 1,
   "sex": "M",
+  "birthDate": "1990-01-15T00:00:00",
   "firstName": "John",
   "lastName": "Doe",
   "city": "Bogotá",
@@ -134,12 +137,13 @@ The Person entity is mapped to the `persons` table with the following columns:
 ```sql
 CREATE TABLE persons (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    sex VARCHAR(1) NOT NULL CHECK (sex IN ('M', 'F')),
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
-    city VARCHAR(100) NOT NULL,
-    document VARCHAR(50) NOT NULL UNIQUE,
-    document_type VARCHAR(20) NOT NULL
+    sexo VARCHAR(1) NOT NULL CHECK (sexo IN ('M', 'F')),
+    nombres VARCHAR(100) NOT NULL,
+    apellidos VARCHAR(100) NOT NULL,
+    fecha_nacimiento DATETIME NOT NULL,
+    ciudad VARCHAR(100) NOT NULL,
+    documento VARCHAR(50) NOT NULL UNIQUE,
+    tipo_documento VARCHAR(20) NOT NULL
 );
 ```
 
@@ -147,8 +151,8 @@ CREATE TABLE persons (
 
 The API provides comprehensive error handling:
 
-- **400 Bad Request**: Validation errors, duplicate documents
-- **404 Not Found**: Person not found for given ID or document
+- **400 Bad Request**: Validation errors, duplicate documents, and resource-not-found cases surfaced as `IllegalArgumentException` (e.g., updating a non-existent person)
+- **404 Not Found**: Person not found when retrieving by ID/document or deleting
 - **500 Internal Server Error**: Unexpected system errors
 
 ## Future Enhancements
