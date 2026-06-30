@@ -69,7 +69,7 @@ class PersonControllerTest {
     @DisplayName("POST /api/persons - Should create person successfully")
     void testCreatePerson_ValidCommand_ShouldReturnCreated() throws Exception {
         // Given
-        CreatePersonCommand command = new CreatePersonCommand("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678", "CC", "Medellin");
+        CreatePersonCommand command = new CreatePersonCommand("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "Medellin", "12345678", "CC");
         when(createPersonUseCase.execute(any(CreatePersonCommand.class))).thenReturn(testPersonDto);
 
         // When & Then
@@ -89,7 +89,7 @@ class PersonControllerTest {
     @DisplayName("POST /api/persons - Should return bad request for duplicate document")
     void testCreatePerson_DuplicateDocument_ShouldReturnBadRequest() throws Exception {
         // Given
-        CreatePersonCommand command = new CreatePersonCommand("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678", "CC", "Medellin");
+        CreatePersonCommand command = new CreatePersonCommand("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "Medellin", "12345678", "CC");
         when(createPersonUseCase.execute(any(CreatePersonCommand.class)))
                 .thenThrow(new IllegalArgumentException("A person with document 12345678 already exists"));
 
@@ -271,7 +271,7 @@ class PersonControllerTest {
     @DisplayName("Should handle unexpected exceptions with internal server error")
     void testCreatePerson_UnexpectedException_ShouldReturnInternalServerError() throws Exception {
         // Given
-        CreatePersonCommand command = new CreatePersonCommand("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678", "CC", "Medellin");
+        CreatePersonCommand command = new CreatePersonCommand("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "Medellin", "12345678", "CC");
         when(createPersonUseCase.execute(any(CreatePersonCommand.class)))
                 .thenThrow(new RuntimeException("Database connection error"));
 
