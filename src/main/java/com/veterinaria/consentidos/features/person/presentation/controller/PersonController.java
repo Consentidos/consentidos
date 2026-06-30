@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
+import java.util.Map;
 
 /**
  * REST controller for Person management.
@@ -187,7 +188,7 @@ public class PersonController {
     public ResponseEntity<?> checkPersonExists(@PathVariable String document) {
         try {
             boolean exists = getPersonUseCase.existsByDocument(document);
-            return ResponseEntity.ok().body("{\"exists\": " + exists + "}");
+            return ResponseEntity.ok().body(Map.of("exists", exists));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An unexpected error occurred while checking person existence");
@@ -203,7 +204,7 @@ public class PersonController {
     public ResponseEntity<?> getTotalPersonCount() {
         try {
             long count = getPersonUseCase.getTotalCount();
-            return ResponseEntity.ok().body("{\"count\": " + count + "}");
+            return ResponseEntity.ok().body(Map.of("count", count));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An unexpected error occurred while counting persons");
