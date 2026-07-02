@@ -1,7 +1,6 @@
 package com.veterinaria.consentidos.features.person.application.command;
 
 import com.veterinaria.consentidos.features.person.domain.common.BasePersonData;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -15,7 +14,6 @@ import lombok.ToString;
 @ToString(callSuper = true)
 public class UpdatePersonCommand extends BasePersonData {
 
-    @NotNull(message = "ID is required")
     private Long id;
 
     // Default constructor

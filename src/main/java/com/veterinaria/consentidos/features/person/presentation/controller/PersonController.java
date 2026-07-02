@@ -62,15 +62,8 @@ public class PersonController {
      */
     @PostMapping
     public ResponseEntity<?> createPerson(@Valid @RequestBody CreatePersonCommand command) {
-        try {
-            PersonDto createdPerson = createPersonUseCase.execute(command);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdPerson);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("An unexpected error occurred while creating the person");
-        }
+        PersonDto createdPerson = createPersonUseCase.execute(command);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdPerson);
     }
 
     /**
@@ -81,17 +74,11 @@ public class PersonController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<?> getPersonById(@PathVariable Long id) {
-        try {
-            PersonDto person = getPersonUseCase.getById(id);
-            if (person != null) {
-                return ResponseEntity.ok(person);
-            } else {
-                return ResponseEntity.notFound().build();
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("An unexpected error occurred while retrieving the person");
+        PersonDto person = getPersonUseCase.getById(id);
+        if (person != null) {
+            return ResponseEntity.ok(person);
         }
+        return ResponseEntity.notFound().build();
     }
 
     /**
@@ -102,17 +89,11 @@ public class PersonController {
      */
     @GetMapping("/document/{document}")
     public ResponseEntity<?> getPersonByDocument(@PathVariable String document) {
-        try {
-            PersonDto person = getPersonUseCase.getByDocument(document);
-            if (person != null) {
-                return ResponseEntity.ok(person);
-            } else {
-                return ResponseEntity.notFound().build();
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("An unexpected error occurred while retrieving the person");
+        PersonDto person = getPersonUseCase.getByDocument(document);
+        if (person != null) {
+            return ResponseEntity.ok(person);
         }
+        return ResponseEntity.notFound().build();
     }
 
     /**
@@ -126,22 +107,15 @@ public class PersonController {
     public ResponseEntity<?> getAllPersons(
             @RequestParam(required = false) String city,
             @RequestParam(required = false) String documentType) {
-        try {
-            List<PersonDto> persons;
-
-            if (city != null && !city.trim().isEmpty()) {
-                persons = getPersonUseCase.getByCity(city);
-            } else if (documentType != null && !documentType.trim().isEmpty()) {
-                persons = getPersonUseCase.getByDocumentType(documentType);
-            } else {
-                persons = getPersonUseCase.getAll();
-            }
-
-            return ResponseEntity.ok(persons);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("An unexpected error occurred while retrieving persons");
+        List<PersonDto> persons;
+        if (city != null && !city.trim().isEmpty()) {
+            persons = getPersonUseCase.getByCity(city);
+        } else if (documentType != null && !documentType.trim().isEmpty()) {
+            persons = getPersonUseCase.getByDocumentType(documentType);
+        } else {
+            persons = getPersonUseCase.getAll();
         }
+        return ResponseEntity.ok(persons);
     }
 
     /**
@@ -153,16 +127,9 @@ public class PersonController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<?> updatePerson(@PathVariable Long id, @Valid @RequestBody UpdatePersonCommand command) {
-        try {
-            command.setId(id); // Ensure the ID from path is used
-            PersonDto updatedPerson = updatePersonUseCase.execute(command);
-            return ResponseEntity.ok(updatedPerson);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("An unexpected error occurred while updating the person");
-        }
+        command.setId(id);
+        PersonDto updatedPerson = updatePersonUseCase.execute(command);
+        return ResponseEntity.ok(updatedPerson);
     }
 
     /**
@@ -175,13 +142,8 @@ public class PersonController {
      */
     @PostMapping("/search")
     public ResponseEntity<?> searchPersons(@RequestBody PersonSearchCriteria criteria) {
-        try {
-            PagedResult<PersonDto> result = searchPersonUseCase.execute(criteria);
-            return ResponseEntity.ok(result);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("An unexpected error occurred while searching persons");
-        }
+        PagedResult<PersonDto> result = searchPersonUseCase.execute(criteria);
+        return ResponseEntity.ok(result);
     }
 
     /**
@@ -197,9 +159,6 @@ public class PersonController {
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("An unexpected error occurred while deleting the person");
         }
     }
 
@@ -211,13 +170,8 @@ public class PersonController {
      */
     @GetMapping("/exists/{document}")
     public ResponseEntity<?> checkPersonExists(@PathVariable String document) {
-        try {
-            boolean exists = getPersonUseCase.existsByDocument(document);
-            return ResponseEntity.ok().body(Map.of("exists", exists));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("An unexpected error occurred while checking person existence");
-        }
+        boolean exists = getPersonUseCase.existsByDocument(document);
+        return ResponseEntity.ok().body(Map.of("exists", exists));
     }
 
     /**
@@ -227,12 +181,7 @@ public class PersonController {
      */
     @GetMapping("/count")
     public ResponseEntity<?> getTotalPersonCount() {
-        try {
-            long count = getPersonUseCase.getTotalCount();
-            return ResponseEntity.ok().body(Map.of("count", count));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("An unexpected error occurred while counting persons");
-        }
+        long count = getPersonUseCase.getTotalCount();
+        return ResponseEntity.ok().body(Map.of("count", count));
     }
 }

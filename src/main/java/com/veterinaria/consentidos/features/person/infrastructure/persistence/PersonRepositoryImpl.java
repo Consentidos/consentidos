@@ -81,6 +81,9 @@ public class PersonRepositoryImpl implements PersonRepository {
 
     @Override
     public PagedResult<Person> search(PersonSearchCriteria criteria) {
+        int page = Math.max(0, criteria.getPage());
+        int size = Math.max(1, criteria.getSize());
+
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
         // Count query for total elements
@@ -95,11 +98,11 @@ public class PersonRepositoryImpl implements PersonRepository {
         Root<Person> dataRoot = dataQuery.from(Person.class);
         dataQuery.where(cb.and(buildPredicates(cb, dataRoot, criteria).toArray(new Predicate[0])));
         List<Person> content = entityManager.createQuery(dataQuery)
-                .setFirstResult(criteria.getPage() * criteria.getSize())
-                .setMaxResults(criteria.getSize())
+                .setFirstResult(page * size)
+                .setMaxResults(size)
                 .getResultList();
 
-        return PagedResult.of(content, criteria.getPage(), criteria.getSize(), totalElements);
+        return PagedResult.of(content, page, size, totalElements);
     }
 
     private List<Predicate> buildPredicates(CriteriaBuilder cb, Root<Person> root, PersonSearchCriteria criteria) {
