@@ -128,7 +128,7 @@ POST /api/persons
 1. **Document Uniqueness**: Each person must have a unique document number
 2. **Sex Validation**: Sex must be either "M" (Male) or "F" (Female)
 3. **Required Fields**: All fields except ID are required
-4. **Document Immutability**: Document number can be updated but must remain unique
+4. **Document Update**: Document number can be updated but the new value must remain unique across all persons
 
 ## Database Schema
 
