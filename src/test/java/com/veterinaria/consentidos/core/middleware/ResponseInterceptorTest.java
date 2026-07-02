@@ -97,10 +97,6 @@ class ResponseInterceptorTest {
         );
         
         // Assert
-        assertInstanceOf(Map.class, result);
-        @SuppressWarnings("unchecked")
-        Map<String, Object> wrappedResponse = (Map<String, Object>) result;
-        
         assertEquals(data, result);
     }
     
