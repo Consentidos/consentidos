@@ -1,11 +1,12 @@
 package com.veterinaria.consentidos.features.person.application.usecase;
 
 import com.veterinaria.consentidos.features.person.application.command.CreatePersonCommand;
-import com.veterinaria.consentidos.features.person.application.command.PersonDto;
+import com.veterinaria.consentidos.features.person.application.dto.PersonDto;
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
 import com.veterinaria.consentidos.features.person.domain.repository.PersonRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Use case for creating a new person.
@@ -29,6 +30,7 @@ public class CreatePersonUseCase {
      * @return PersonDto representing the created person
      * @throws IllegalArgumentException if a person with the same document already exists
      */
+    @Transactional
     public PersonDto execute(CreatePersonCommand command) {
         // Validate that document doesn't already exist
         if (personRepository.existsByDocument(command.getDocument())) {

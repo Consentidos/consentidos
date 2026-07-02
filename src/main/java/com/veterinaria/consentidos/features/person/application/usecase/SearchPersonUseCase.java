@@ -1,11 +1,12 @@
 package com.veterinaria.consentidos.features.person.application.usecase;
 
 import com.veterinaria.consentidos.core.PagedResult;
-import com.veterinaria.consentidos.features.person.application.command.PersonDto;
+import com.veterinaria.consentidos.features.person.application.dto.PersonDto;
 import com.veterinaria.consentidos.features.person.domain.criteria.PersonSearchCriteria;
 import com.veterinaria.consentidos.features.person.domain.repository.PersonRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.stream.Collectors;
 
 /**
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
  * Delegates to the repository and maps results to DTOs.
  */
 @Service
+@Transactional(readOnly = true)
 public class SearchPersonUseCase {
 
     private final PersonRepository personRepository;

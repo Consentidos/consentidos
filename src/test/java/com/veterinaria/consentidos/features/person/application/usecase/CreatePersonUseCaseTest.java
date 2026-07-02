@@ -1,7 +1,7 @@
 package com.veterinaria.consentidos.features.person.application.usecase;
 
 import com.veterinaria.consentidos.features.person.application.command.CreatePersonCommand;
-import com.veterinaria.consentidos.features.person.application.command.PersonDto;
+import com.veterinaria.consentidos.features.person.application.dto.PersonDto;
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
 import com.veterinaria.consentidos.features.person.domain.repository.PersonRepository;
 import org.junit.jupiter.api.BeforeEach;

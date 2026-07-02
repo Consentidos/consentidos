@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.veterinaria.consentidos.core.PagedResult;
 import com.veterinaria.consentidos.features.person.application.command.CreatePersonCommand;
-import com.veterinaria.consentidos.features.person.application.command.PersonDto;
+import com.veterinaria.consentidos.features.person.application.dto.PersonDto;
 import com.veterinaria.consentidos.features.person.application.command.UpdatePersonCommand;
 import com.veterinaria.consentidos.features.person.application.usecase.CreatePersonUseCase;
 import com.veterinaria.consentidos.features.person.application.usecase.DeletePersonUseCase;

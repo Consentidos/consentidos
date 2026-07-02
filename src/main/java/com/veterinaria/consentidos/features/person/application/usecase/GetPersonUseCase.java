@@ -1,10 +1,11 @@
 package com.veterinaria.consentidos.features.person.application.usecase;
 
-import com.veterinaria.consentidos.features.person.application.command.PersonDto;
+import com.veterinaria.consentidos.features.person.application.dto.PersonDto;
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
 import com.veterinaria.consentidos.features.person.domain.repository.PersonRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
  * This class contains the business logic for person retrieval operations.
  */
 @Service
+@Transactional(readOnly = true)
 public class GetPersonUseCase {
 
     private final PersonRepository personRepository;

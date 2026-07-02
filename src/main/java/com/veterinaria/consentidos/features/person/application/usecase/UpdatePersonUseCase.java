@@ -1,11 +1,12 @@
 package com.veterinaria.consentidos.features.person.application.usecase;
 
-import com.veterinaria.consentidos.features.person.application.command.PersonDto;
+import com.veterinaria.consentidos.features.person.application.dto.PersonDto;
 import com.veterinaria.consentidos.features.person.application.command.UpdatePersonCommand;
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
 import com.veterinaria.consentidos.features.person.domain.repository.PersonRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 /**
@@ -30,6 +31,7 @@ public class UpdatePersonUseCase {
      * @return PersonDto representing the updated person
      * @throws IllegalArgumentException if the person is not found or document already exists
      */
+    @Transactional
     public PersonDto execute(UpdatePersonCommand command) {
         // Find the existing person
         Optional<Person> existingPersonOpt = personRepository.findById(command.getId());
