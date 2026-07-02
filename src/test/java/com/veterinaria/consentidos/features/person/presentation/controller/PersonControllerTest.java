@@ -2,13 +2,16 @@ package com.veterinaria.consentidos.features.person.presentation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.veterinaria.consentidos.core.PagedResult;
 import com.veterinaria.consentidos.features.person.application.command.CreatePersonCommand;
 import com.veterinaria.consentidos.features.person.application.command.PersonDto;
 import com.veterinaria.consentidos.features.person.application.command.UpdatePersonCommand;
 import com.veterinaria.consentidos.features.person.application.usecase.CreatePersonUseCase;
 import com.veterinaria.consentidos.features.person.application.usecase.DeletePersonUseCase;
 import com.veterinaria.consentidos.features.person.application.usecase.GetPersonUseCase;
+import com.veterinaria.consentidos.features.person.application.usecase.SearchPersonUseCase;
 import com.veterinaria.consentidos.features.person.application.usecase.UpdatePersonUseCase;
+import com.veterinaria.consentidos.features.person.domain.criteria.PersonSearchCriteria;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -53,6 +56,9 @@ class PersonControllerTest {
 
     @MockBean
     private DeletePersonUseCase deletePersonUseCase;
+
+    @MockBean
+    private SearchPersonUseCase searchPersonUseCase;
 
     private ObjectMapper objectMapper;
     private PersonDto testPersonDto;
@@ -283,5 +289,46 @@ class PersonControllerTest {
                 .andExpect(content().string(containsString("An unexpected error occurred")));
 
         verify(createPersonUseCase).execute(any(CreatePersonCommand.class));
+    }
+
+    @Test
+    @DisplayName("POST /api/persons/search - Should return paged result")
+    void testSearchPersons_ValidCriteria_ShouldReturnPagedResult() throws Exception {
+        // Given
+        PersonSearchCriteria criteria = PersonSearchCriteria.builder().city("Medellin").page(0).size(10).build();
+        PagedResult<PersonDto> pagedResult = PagedResult.of(
+                Collections.singletonList(testPersonDto), 0, 10, 1L);
+        when(searchPersonUseCase.execute(any(PersonSearchCriteria.class))).thenReturn(pagedResult);
+
+        // When & Then
+        mockMvc.perform(post("/api/persons/search")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(criteria)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements", is(1)))
+                .andExpect(jsonPath("$.totalPages", is(1)))
+                .andExpect(jsonPath("$.page", is(0)))
+                .andExpect(jsonPath("$.size", is(10)))
+                .andExpect(jsonPath("$.content[0].firstName", is("Juan")));
+
+        verify(searchPersonUseCase).execute(any(PersonSearchCriteria.class));
+    }
+
+    @Test
+    @DisplayName("POST /api/persons/search - Should return internal server error on exception")
+    void testSearchPersons_UnexpectedException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        PersonSearchCriteria criteria = new PersonSearchCriteria();
+        when(searchPersonUseCase.execute(any(PersonSearchCriteria.class)))
+                .thenThrow(new RuntimeException("Unexpected error"));
+
+        // When & Then
+        mockMvc.perform(post("/api/persons/search")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(criteria)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string(containsString("An unexpected error occurred")));
+
+        verify(searchPersonUseCase).execute(any(PersonSearchCriteria.class));
     }
 }

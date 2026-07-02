@@ -1,5 +1,7 @@
 package com.veterinaria.consentidos.features.person.domain.repository;
 
+import com.veterinaria.consentidos.core.PagedResult;
+import com.veterinaria.consentidos.features.person.domain.criteria.PersonSearchCriteria;
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
 import java.util.List;
 import java.util.Optional;
@@ -79,4 +81,13 @@ public interface PersonRepository {
      * @return the total count of persons
      */
     long count();
+
+    /**
+     * Searches persons using dynamic criteria with AND composition and returns a paginated result.
+     * Only non-null/non-blank fields in criteria are applied as filters.
+     *
+     * @param criteria the search criteria including pagination parameters
+     * @return a paginated result of persons matching all provided criteria
+     */
+    PagedResult<Person> search(PersonSearchCriteria criteria);
 }

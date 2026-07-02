@@ -1,12 +1,15 @@
 package com.veterinaria.consentidos.features.person.presentation.controller;
 
+import com.veterinaria.consentidos.core.PagedResult;
 import com.veterinaria.consentidos.features.person.application.command.CreatePersonCommand;
 import com.veterinaria.consentidos.features.person.application.command.PersonDto;
 import com.veterinaria.consentidos.features.person.application.command.UpdatePersonCommand;
 import com.veterinaria.consentidos.features.person.application.usecase.CreatePersonUseCase;
 import com.veterinaria.consentidos.features.person.application.usecase.DeletePersonUseCase;
 import com.veterinaria.consentidos.features.person.application.usecase.GetPersonUseCase;
+import com.veterinaria.consentidos.features.person.application.usecase.SearchPersonUseCase;
 import com.veterinaria.consentidos.features.person.application.usecase.UpdatePersonUseCase;
+import com.veterinaria.consentidos.features.person.domain.criteria.PersonSearchCriteria;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -35,17 +38,20 @@ public class PersonController {
     private final GetPersonUseCase getPersonUseCase;
     private final UpdatePersonUseCase updatePersonUseCase;
     private final DeletePersonUseCase deletePersonUseCase;
+    private final SearchPersonUseCase searchPersonUseCase;
 
     @Autowired
     public PersonController(
             CreatePersonUseCase createPersonUseCase,
             GetPersonUseCase getPersonUseCase,
             UpdatePersonUseCase updatePersonUseCase,
-            DeletePersonUseCase deletePersonUseCase) {
+            DeletePersonUseCase deletePersonUseCase,
+            SearchPersonUseCase searchPersonUseCase) {
         this.createPersonUseCase = createPersonUseCase;
         this.getPersonUseCase = getPersonUseCase;
         this.updatePersonUseCase = updatePersonUseCase;
         this.deletePersonUseCase = deletePersonUseCase;
+        this.searchPersonUseCase = searchPersonUseCase;
     }
 
     /**
@@ -156,6 +162,25 @@ public class PersonController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An unexpected error occurred while updating the person");
+        }
+    }
+
+    /**
+     * Searches persons using dynamic criteria with AND composition.
+     * All fields are optional; only provided fields are applied as filters.
+     * Text fields use case-insensitive LIKE matching; date fields define a range.
+     *
+     * @param criteria the search criteria
+     * @return ResponseEntity with the list of matching persons
+     */
+    @PostMapping("/search")
+    public ResponseEntity<?> searchPersons(@RequestBody PersonSearchCriteria criteria) {
+        try {
+            PagedResult<PersonDto> result = searchPersonUseCase.execute(criteria);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred while searching persons");
         }
     }
 
