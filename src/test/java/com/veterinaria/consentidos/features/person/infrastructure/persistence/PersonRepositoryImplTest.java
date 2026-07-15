@@ -36,6 +36,9 @@ class PersonRepositoryImplTest {
     @Mock
     private PersonJpaRepository personJpaRepository;
 
+    @Mock
+    private PersonQueryBuilder queryBuilder;
+
     @InjectMocks
     private PersonRepositoryImpl personRepository;
 
