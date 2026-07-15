@@ -12,6 +12,8 @@ import com.veterinaria.consentidos.features.person.application.usecase.GetPerson
 import com.veterinaria.consentidos.features.person.application.usecase.SearchPersonUseCase;
 import com.veterinaria.consentidos.features.person.application.usecase.UpdatePersonUseCase;
 import com.veterinaria.consentidos.features.person.domain.criteria.PersonSearchCriteria;
+import com.veterinaria.consentidos.features.person.domain.exception.PersonAlreadyExistsException;
+import com.veterinaria.consentidos.features.person.domain.exception.PersonNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -92,18 +94,18 @@ class PersonControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/persons - Should return bad request for duplicate document")
-    void testCreatePerson_DuplicateDocument_ShouldReturnBadRequest() throws Exception {
+    @DisplayName("POST /api/persons - Should return conflict for duplicate document")
+    void testCreatePerson_DuplicateDocument_ShouldReturnConflict() throws Exception {
         // Given
         CreatePersonCommand command = new CreatePersonCommand("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "Medellin", "12345678", "CC");
         when(createPersonUseCase.execute(any(CreatePersonCommand.class)))
-                .thenThrow(new IllegalArgumentException("A person with document 12345678 already exists"));
+                .thenThrow(new PersonAlreadyExistsException("12345678"));
 
         // When & Then
         mockMvc.perform(post("/api/persons")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(command)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isConflict())
                 .andExpect(content().string(containsString("A person with document 12345678 already exists")));
 
         verify(createPersonUseCase).execute(any(CreatePersonCommand.class));
@@ -129,27 +131,13 @@ class PersonControllerTest {
     @DisplayName("GET /api/persons/{id} - Should return not found when person does not exist")
     void testGetPersonById_PersonNotFound_ShouldReturnNotFound() throws Exception {
         // Given
-        when(getPersonUseCase.getById(999L)).thenReturn(null);
+        when(getPersonUseCase.getById(999L)).thenThrow(new PersonNotFoundException(999L));
 
         // When & Then
         mockMvc.perform(get("/api/persons/999"))
                 .andExpect(status().isNotFound());
 
         verify(getPersonUseCase).getById(999L);
-    }
-
-    @Test
-    @DisplayName("GET /api/persons/document/{document} - Should return person when found by document")
-    void testGetPersonByDocument_PersonExists_ShouldReturnPerson() throws Exception {
-        // Given
-        when(getPersonUseCase.getByDocument("12345678")).thenReturn(testPersonDto);
-
-        // When & Then
-        mockMvc.perform(get("/api/persons/document/12345678"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.document", is("12345678")));
-
-        verify(getPersonUseCase).getByDocument("12345678");
     }
 
     @Test
@@ -229,18 +217,18 @@ class PersonControllerTest {
     }
 
     @Test
-    @DisplayName("PUT /api/persons/{id} - Should return bad request when person not found")
-    void testUpdatePerson_PersonNotFound_ShouldReturnBadRequest() throws Exception {
+    @DisplayName("PUT /api/persons/{id} - Should return not found when person not found")
+    void testUpdatePerson_PersonNotFound_ShouldReturnNotFound() throws Exception {
         // Given
         UpdatePersonCommand command = new UpdatePersonCommand(999L, "F", "Test", "User", "City", "12345", "CC");
         when(updatePersonUseCase.execute(any(UpdatePersonCommand.class)))
-                .thenThrow(new IllegalArgumentException("Person with ID 999 not found"));
+                .thenThrow(new PersonNotFoundException(999L));
 
         // When & Then
         mockMvc.perform(put("/api/persons/999")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(command)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isNotFound())
                 .andExpect(content().string(containsString("Person with ID 999 not found")));
 
         verify(updatePersonUseCase).execute(any(UpdatePersonCommand.class));
@@ -263,7 +251,7 @@ class PersonControllerTest {
     @DisplayName("DELETE /api/persons/{id} - Should return not found when person does not exist")
     void testDeletePerson_PersonNotFound_ShouldReturnNotFound() throws Exception {
         // Given
-        doThrow(new IllegalArgumentException("Person with ID 999 not found"))
+        doThrow(new PersonNotFoundException(999L))
                 .when(deletePersonUseCase).execute(999L);
 
         // When & Then

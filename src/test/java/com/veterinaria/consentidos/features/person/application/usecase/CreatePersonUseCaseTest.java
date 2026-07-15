@@ -3,6 +3,7 @@ package com.veterinaria.consentidos.features.person.application.usecase;
 import com.veterinaria.consentidos.features.person.application.command.CreatePersonCommand;
 import com.veterinaria.consentidos.features.person.application.dto.PersonDto;
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
+import com.veterinaria.consentidos.features.person.domain.exception.PersonAlreadyExistsException;
 import com.veterinaria.consentidos.features.person.domain.repository.PersonRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -83,8 +84,8 @@ class CreatePersonUseCaseTest {
         when(personRepository.existsByDocument("12345678")).thenReturn(true);
 
         // When & Then
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
+        PersonAlreadyExistsException exception = assertThrows(
+            PersonAlreadyExistsException.class,
             () -> createPersonUseCase.execute(validCommand)
         );
 

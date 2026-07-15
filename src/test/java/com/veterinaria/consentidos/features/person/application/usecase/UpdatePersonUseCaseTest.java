@@ -3,6 +3,8 @@ package com.veterinaria.consentidos.features.person.application.usecase;
 import com.veterinaria.consentidos.features.person.application.dto.PersonDto;
 import com.veterinaria.consentidos.features.person.application.command.UpdatePersonCommand;
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
+import com.veterinaria.consentidos.features.person.domain.exception.PersonAlreadyExistsException;
+import com.veterinaria.consentidos.features.person.domain.exception.PersonNotFoundException;
 import com.veterinaria.consentidos.features.person.domain.repository.PersonRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -97,7 +99,7 @@ class UpdatePersonUseCaseTest {
     }
 
     @Test
-    @DisplayName("Should throw IllegalArgumentException when person not found")
+    @DisplayName("Should throw PersonNotFoundException when person not found")
     void testExecute_PersonNotFound_ShouldThrowException() {
         // Given
         when(personRepository.findById(999L)).thenReturn(Optional.empty());
@@ -105,8 +107,8 @@ class UpdatePersonUseCaseTest {
         UpdatePersonCommand invalidCommand = new UpdatePersonCommand(999L, "F", "Test", "User", "City", "12345", "CC");
 
         // When & Then
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
+        PersonNotFoundException exception = assertThrows(
+            PersonNotFoundException.class,
             () -> updatePersonUseCase.execute(invalidCommand)
         );
 
@@ -116,15 +118,15 @@ class UpdatePersonUseCaseTest {
     }
 
     @Test
-    @DisplayName("Should throw IllegalArgumentException when new document already exists")
+    @DisplayName("Should throw PersonAlreadyExistsException when new document already exists")
     void testExecute_DocumentAlreadyExists_ShouldThrowException() {
         // Given
         when(personRepository.findById(1L)).thenReturn(Optional.of(existingPerson));
         when(personRepository.existsByDocument("87654321")).thenReturn(true);
 
         // When & Then
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
+        PersonAlreadyExistsException exception = assertThrows(
+            PersonAlreadyExistsException.class,
             () -> updatePersonUseCase.execute(updateCommand)
         );
 

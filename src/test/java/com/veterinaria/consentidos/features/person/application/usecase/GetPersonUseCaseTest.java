@@ -2,6 +2,7 @@ package com.veterinaria.consentidos.features.person.application.usecase;
 
 import com.veterinaria.consentidos.features.person.application.dto.PersonDto;
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
+import com.veterinaria.consentidos.features.person.domain.exception.PersonNotFoundException;
 import com.veterinaria.consentidos.features.person.domain.repository.PersonRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -66,48 +67,14 @@ class GetPersonUseCaseTest {
     }
 
     @Test
-    @DisplayName("Should return null when person does not exist by ID")
-    void testGetById_PersonNotExists_ShouldReturnNull() {
+    @DisplayName("Should throw PersonNotFoundException when person does not exist by ID")
+    void testGetById_PersonNotExists_ShouldThrowException() {
         // Given
         when(personRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // When
-        PersonDto result = getPersonUseCase.getById(999L);
-
-        // Then
-        assertNull(result);
+        // When & Then
+        assertThrows(PersonNotFoundException.class, () -> getPersonUseCase.getById(999L));
         verify(personRepository).findById(999L);
-    }
-
-    @Test
-    @DisplayName("Should return PersonDto when person exists by document")
-    void testGetByDocument_PersonExists_ShouldReturnPersonDto() {
-        // Given
-        when(personRepository.findByDocument("12345678")).thenReturn(Optional.of(testPerson1));
-
-        // When
-        PersonDto result = getPersonUseCase.getByDocument("12345678");
-
-        // Then
-        assertNotNull(result);
-        assertEquals("12345678", result.getDocument());
-        assertEquals("Juan", result.getFirstName());
-        
-        verify(personRepository).findByDocument("12345678");
-    }
-
-    @Test
-    @DisplayName("Should return null when person does not exist by document")
-    void testGetByDocument_PersonNotExists_ShouldReturnNull() {
-        // Given
-        when(personRepository.findByDocument("999999")).thenReturn(Optional.empty());
-
-        // When
-        PersonDto result = getPersonUseCase.getByDocument("999999");
-
-        // Then
-        assertNull(result);
-        verify(personRepository).findByDocument("999999");
     }
 
     @Test
@@ -194,19 +161,5 @@ class GetPersonUseCaseTest {
         assertEquals("CC", result.get(0).getDocumentType());
         
         verify(personRepository).findByDocumentType("CC");
-    }
-
-    @Test
-    @DisplayName("Should handle null parameters gracefully")
-    void testGetByDocument_NullDocument_ShouldCallRepository() {
-        // Given
-        when(personRepository.findByDocument(null)).thenReturn(Optional.empty());
-
-        // When
-        PersonDto result = getPersonUseCase.getByDocument(null);
-
-        // Then
-        assertNull(result);
-        verify(personRepository).findByDocument(null);
     }
 }

@@ -1,6 +1,7 @@
 package com.veterinaria.consentidos.features.person.application.usecase;
 
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
+import com.veterinaria.consentidos.features.person.domain.exception.PersonNotFoundException;
 import com.veterinaria.consentidos.features.person.domain.repository.PersonRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -54,14 +55,14 @@ class DeletePersonUseCaseTest {
     }
 
     @Test
-    @DisplayName("Should throw IllegalArgumentException when person does not exist")
+    @DisplayName("Should throw PersonNotFoundException when person does not exist")
     void testExecute_PersonNotFound_ShouldThrowException() {
         // Given
         when(personRepository.findById(999L)).thenReturn(Optional.empty());
 
         // When & Then
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
+        PersonNotFoundException exception = assertThrows(
+            PersonNotFoundException.class,
             () -> deletePersonUseCase.execute(999L)
         );
 
@@ -113,14 +114,14 @@ class DeletePersonUseCaseTest {
     }
 
     @Test
-    @DisplayName("Should throw IllegalArgumentException when trying to delete with null ID")
+    @DisplayName("Should throw PersonNotFoundException when trying to delete with null ID")
     void testExecute_NullId_ShouldThrowException() {
         // Given
         when(personRepository.findById(null)).thenReturn(Optional.empty());
 
         // When & Then
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
+        PersonNotFoundException exception = assertThrows(
+            PersonNotFoundException.class,
             () -> deletePersonUseCase.execute(null)
         );
 
@@ -151,8 +152,8 @@ class DeletePersonUseCaseTest {
         when(personRepository.findById(-1L)).thenReturn(Optional.empty());
 
         // When & Then
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
+        PersonNotFoundException exception = assertThrows(
+            PersonNotFoundException.class,
             () -> deletePersonUseCase.execute(-1L)
         );
 
