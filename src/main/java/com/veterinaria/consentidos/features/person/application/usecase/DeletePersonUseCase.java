@@ -1,5 +1,6 @@
 package com.veterinaria.consentidos.features.person.application.usecase;
 
+import com.veterinaria.consentidos.features.person.domain.exception.PersonNotFoundException;
 import com.veterinaria.consentidos.features.person.domain.repository.PersonRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,8 +27,8 @@ public class DeletePersonUseCase {
      */
     @Transactional
     public void execute(Long id) {
-        if (!personRepository.findById(id).isPresent()) {
-            throw new IllegalArgumentException("Person with ID " + id + " not found");
+        if (personRepository.findById(id).isEmpty()) {
+            throw new PersonNotFoundException(id);
         }
 
         personRepository.deleteById(id);

@@ -3,6 +3,7 @@ package com.veterinaria.consentidos.features.person.application.usecase;
 import com.veterinaria.consentidos.features.person.application.command.CreatePersonCommand;
 import com.veterinaria.consentidos.features.person.application.dto.PersonDto;
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
+import com.veterinaria.consentidos.features.person.domain.exception.PersonAlreadyExistsException;
 import com.veterinaria.consentidos.features.person.domain.repository.PersonRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,7 +35,7 @@ public class CreatePersonUseCase {
     public PersonDto execute(CreatePersonCommand command) {
         // Validate that document doesn't already exist
         if (personRepository.existsByDocument(command.getDocument())) {
-            throw new IllegalArgumentException("A person with document " + command.getDocument() + " already exists");
+            throw new PersonAlreadyExistsException(command.getDocument());
         }
 
         // Create and save the person
