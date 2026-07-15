@@ -1,5 +1,7 @@
 package com.veterinaria.consentidos.core.middleware;
 
+import com.veterinaria.consentidos.features.person.domain.exception.PersonAlreadyExistsException;
+import com.veterinaria.consentidos.features.person.domain.exception.PersonNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -42,19 +44,53 @@ public class ErrorHandler {
     }
     
     /**
+     * Handles person not found exceptions
+     */
+    @ExceptionHandler(PersonNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handlePersonNotFoundException(
+            PersonNotFoundException ex, WebRequest request) {
+
+        Map<String, Object> response = createErrorResponse(
+            HttpStatus.NOT_FOUND,
+            "Not Found",
+            ex.getMessage(),
+            request
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    /**
+     * Handles person already exists exceptions
+     */
+    @ExceptionHandler(PersonAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handlePersonAlreadyExistsException(
+            PersonAlreadyExistsException ex, WebRequest request) {
+
+        Map<String, Object> response = createErrorResponse(
+            HttpStatus.CONFLICT,
+            "Conflict",
+            ex.getMessage(),
+            request
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+    }
+
+    /**
      * Handles illegal argument exceptions
      */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(
             IllegalArgumentException ex, WebRequest request) {
-        
+
         Map<String, Object> response = createErrorResponse(
             HttpStatus.BAD_REQUEST,
             "Invalid Argument",
             ex.getMessage(),
             request
         );
-        
+
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
     
