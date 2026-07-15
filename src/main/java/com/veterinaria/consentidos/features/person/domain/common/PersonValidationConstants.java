@@ -9,6 +9,9 @@ public final class PersonValidationConstants {
     private PersonValidationConstants() {
         // Utility class
     }
+
+    // Shared suffix for size messages
+    private static final String CHARACTERS_SUFFIX = " characters";
     
     // Field validation patterns
     public static final String SEX_PATTERN = "^[MF]$";
@@ -25,13 +28,13 @@ public final class PersonValidationConstants {
     public static final String SEX_PATTERN_MESSAGE = "Sex must be M or F";
     public static final String BIRTH_DATE_REQUIRED_MESSAGE = "Birth date is required";
     public static final String FIRST_NAME_REQUIRED_MESSAGE = "First name is required";
-    public static final String FIRST_NAME_SIZE_MESSAGE = "First name must not exceed " + FIRST_NAME_MAX_LENGTH + " characters";
+    public static final String FIRST_NAME_SIZE_MESSAGE = "First name must not exceed " + FIRST_NAME_MAX_LENGTH + CHARACTERS_SUFFIX;
     public static final String LAST_NAME_REQUIRED_MESSAGE = "Last name is required";
-    public static final String LAST_NAME_SIZE_MESSAGE = "Last name must not exceed " + LAST_NAME_MAX_LENGTH + " characters";
+    public static final String LAST_NAME_SIZE_MESSAGE = "Last name must not exceed " + LAST_NAME_MAX_LENGTH + CHARACTERS_SUFFIX;
     public static final String CITY_REQUIRED_MESSAGE = "City is required";
-    public static final String CITY_SIZE_MESSAGE = "City must not exceed " + CITY_MAX_LENGTH + " characters";
+    public static final String CITY_SIZE_MESSAGE = "City must not exceed " + CITY_MAX_LENGTH + CHARACTERS_SUFFIX;
     public static final String DOCUMENT_REQUIRED_MESSAGE = "Document is required";
-    public static final String DOCUMENT_SIZE_MESSAGE = "Document must not exceed " + DOCUMENT_MAX_LENGTH + " characters";
+    public static final String DOCUMENT_SIZE_MESSAGE = "Document must not exceed " + DOCUMENT_MAX_LENGTH + CHARACTERS_SUFFIX;
     public static final String DOCUMENT_TYPE_REQUIRED_MESSAGE = "Document type is required";
-    public static final String DOCUMENT_TYPE_SIZE_MESSAGE = "Document type must not exceed " + DOCUMENT_TYPE_MAX_LENGTH + " characters";
+    public static final String DOCUMENT_TYPE_SIZE_MESSAGE = "Document type must not exceed " + DOCUMENT_TYPE_MAX_LENGTH + CHARACTERS_SUFFIX;
 }
