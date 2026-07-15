@@ -27,8 +27,8 @@ public class CreatePersonCommand extends BasePersonData {
     }
 
     // Constructor with all fields
-    public CreatePersonCommand(String sex, LocalDateTime birthDate, String firstName, String lastName, String city, String document, String documentType) {
-        super(sex, firstName, lastName, city, document, documentType);
+    public CreatePersonCommand(String sex, LocalDateTime birthDate, String firstName, String lastName, String city, String documentNumber, Long documentIdentifierId) {
+        super(sex, firstName, lastName, city, documentNumber, documentIdentifierId);
         this.birthDate = birthDate;
     }
 }

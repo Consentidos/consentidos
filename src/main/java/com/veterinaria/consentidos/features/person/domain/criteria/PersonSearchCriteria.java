@@ -19,8 +19,8 @@ public class PersonSearchCriteria {
 
     private String firstName;
     private String lastName;
-    private String document;
-    private String documentType;
+    private String documentNumber;
+    private Long documentIdentifierId;
     private String sex;
     private String city;
     private LocalDateTime birthDateFrom;

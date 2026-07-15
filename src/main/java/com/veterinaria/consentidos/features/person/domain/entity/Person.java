@@ -1,11 +1,13 @@
 package com.veterinaria.consentidos.features.person.domain.entity;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -14,6 +16,8 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+import com.veterinaria.consentidos.features.documentIdentifier.domain.entity.DocumentIdentifier;
+import com.veterinaria.consentidos.features.person.domain.common.Document;
 import static com.veterinaria.consentidos.features.person.domain.common.PersonValidationConstants.*;
 
 /**
@@ -48,15 +52,9 @@ public class Person {
     @Size(max = LAST_NAME_MAX_LENGTH, message = LAST_NAME_SIZE_MESSAGE)
     private String lastName;
 
-    @Column(name = "documento", nullable = false, unique = true, length = DOCUMENT_MAX_LENGTH)
-    @NotBlank(message = DOCUMENT_REQUIRED_MESSAGE)
-    @Size(max = DOCUMENT_MAX_LENGTH, message = DOCUMENT_SIZE_MESSAGE)
-    private String document;
-
-    @Column(name = "tipo_documento", nullable = false, length = DOCUMENT_TYPE_MAX_LENGTH)
-    @NotBlank(message = DOCUMENT_TYPE_REQUIRED_MESSAGE)
-    @Size(max = DOCUMENT_TYPE_MAX_LENGTH, message = DOCUMENT_TYPE_SIZE_MESSAGE)
-    private String documentType;
+    @Valid
+    @Embedded
+    private Document identification;
 
     @Column(name = "ciudad", nullable = false, length = CITY_MAX_LENGTH)
     @NotBlank(message = CITY_REQUIRED_MESSAGE)
@@ -68,26 +66,48 @@ public class Person {
     }
 
     // Constructor for creating new persons
-    public Person(String sex, LocalDateTime birthDate, String firstName, String lastName, String document, String documentType, String city) {
+    public Person(String sex, LocalDateTime birthDate, String firstName, String lastName, String documentNumber, DocumentIdentifier documentIdentifier, String city) {
         this.sex = sex;
         this.birthDate = birthDate;
         this.firstName = firstName;
         this.lastName = lastName;
-        this.document = document;
-        this.documentType = documentType;
+        this.identification = new Document(documentNumber, documentIdentifier);
         this.city = city;
+    }
+
+    // Convenience accessors — delegate to the Document value object
+    public String getDocumentNumber() {
+        return identification != null ? identification.getDocumentNumber() : null;
+    }
+
+    public void setDocumentNumber(String documentNumber) {
+        if (this.identification == null) this.identification = new Document();
+        this.identification.setDocumentNumber(documentNumber);
+    }
+
+    public DocumentIdentifier getDocumentIdentifier() {
+        return identification != null ? identification.getDocumentIdentifier() : null;
+    }
+
+    public void setDocumentIdentifier(DocumentIdentifier documentIdentifier) {
+        if (this.identification == null) this.identification = new Document();
+        this.identification.setDocumentIdentifier(documentIdentifier);
+    }
+
+    public String getDocumentType() {
+        return identification != null && identification.getDocumentIdentifier() != null
+                ? identification.getDocumentIdentifier().getDocumentType() : null;
     }
 
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (!(obj instanceof Person person)) return false;
-        return Objects.equals(document, person.document)
-                && Objects.equals(documentType, person.documentType);
+        return Objects.equals(identification, person.identification);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(document, documentType);
+        return Objects.hash(identification);
     }
 }

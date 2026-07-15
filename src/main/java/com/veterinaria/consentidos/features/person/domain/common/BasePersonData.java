@@ -1,9 +1,9 @@
 package com.veterinaria.consentidos.features.person.domain.common;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -37,23 +37,22 @@ public abstract class BasePersonData {
 
     @NotBlank(message = DOCUMENT_REQUIRED_MESSAGE)
     @Size(max = DOCUMENT_MAX_LENGTH, message = DOCUMENT_SIZE_MESSAGE)
-    protected String document;
+    protected String documentNumber;
 
-    @NotBlank(message = DOCUMENT_TYPE_REQUIRED_MESSAGE)
-    @Size(max = DOCUMENT_TYPE_MAX_LENGTH, message = DOCUMENT_TYPE_SIZE_MESSAGE)
-    protected String documentType;
+    @NotNull(message = DOCUMENT_IDENTIFIER_REQUIRED_MESSAGE)
+    protected Long documentIdentifierId;
 
     // Protected constructor for subclasses
     protected BasePersonData() {
     }
 
-    protected BasePersonData(String sex, String firstName, String lastName, String city, String document, String documentType) {
+    protected BasePersonData(String sex, String firstName, String lastName, String city, String documentNumber, Long documentIdentifierId) {
         this.sex = sex;
         this.firstName = firstName;
         this.lastName = lastName;
         this.city = city;
-        this.document = document;
-        this.documentType = documentType;
+        this.documentNumber = documentNumber;
+        this.documentIdentifierId = documentIdentifierId;
     }
 
     // Utility method available to all subclasses
