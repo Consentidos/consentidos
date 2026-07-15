@@ -1,5 +1,7 @@
 package com.veterinaria.consentidos.features.person.application.usecase;
 
+import com.veterinaria.consentidos.features.documentIdentifier.domain.entity.DocumentIdentifier;
+import com.veterinaria.consentidos.features.documentIdentifier.domain.repository.DocumentIdentifierRepository;
 import com.veterinaria.consentidos.features.person.application.command.CreatePersonCommand;
 import com.veterinaria.consentidos.features.person.application.dto.PersonDto;
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
@@ -11,47 +13,40 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Use case for creating a new person.
- * This class contains the business logic for person creation,
- * including validation and data persistence.
  */
 @Service
 public class CreatePersonUseCase {
 
     private final PersonRepository personRepository;
+    private final DocumentIdentifierRepository documentIdentifierRepository;
 
     @Autowired
-    public CreatePersonUseCase(PersonRepository personRepository) {
+    public CreatePersonUseCase(PersonRepository personRepository, DocumentIdentifierRepository documentIdentifierRepository) {
         this.personRepository = personRepository;
+        this.documentIdentifierRepository = documentIdentifierRepository;
     }
 
-    /**
-     * Creates a new person based on the provided command.
-     *
-     * @param command the command containing person data
-     * @return PersonDto representing the created person
-     * @throws IllegalArgumentException if a person with the same document already exists
-     */
     @Transactional
     public PersonDto execute(CreatePersonCommand command) {
-        // Validate that document doesn't already exist
-        if (personRepository.existsByDocument(command.getDocument())) {
-            throw new PersonAlreadyExistsException(command.getDocument());
+        if (personRepository.existsByDocument(command.getDocumentNumber())) {
+            throw new PersonAlreadyExistsException(command.getDocumentNumber());
         }
 
-        // Create and save the person
+        DocumentIdentifier documentIdentifier = documentIdentifierRepository
+                .findById(command.getDocumentIdentifierId())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Document identifier not found: " + command.getDocumentIdentifierId()));
+
         Person person = new Person(
                 command.getSex(),
                 command.getBirthDate(),
                 command.getFirstName(),
                 command.getLastName(),
-                command.getDocument(),
-                command.getDocumentType(),
+                command.getDocumentNumber(),
+                documentIdentifier,
                 command.getCity()
         );
 
-        Person savedPerson = personRepository.save(person);
-
-        // Convert to DTO and return
-        return PersonDto.fromEntity(savedPerson);
+        return PersonDto.fromEntity(personRepository.save(person));
     }
 }
