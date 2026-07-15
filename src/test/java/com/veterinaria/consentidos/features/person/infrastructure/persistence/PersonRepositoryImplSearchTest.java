@@ -1,6 +1,9 @@
 package com.veterinaria.consentidos.features.person.infrastructure.persistence;
 
 import com.veterinaria.consentidos.core.PagedResult;
+import com.veterinaria.consentidos.features.documentIdentifier.domain.entity.DocumentIdentifier;
+import com.veterinaria.consentidos.features.documentIdentifier.infrastructure.persistence.DocumentIdentifierJpaRepository;
+import com.veterinaria.consentidos.features.documentIdentifier.infrastructure.persistence.DocumentIdentifierRepositoryImpl;
 import com.veterinaria.consentidos.features.person.domain.criteria.PersonSearchCriteria;
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DataJpaTest
-@Import({PersonRepositoryImpl.class, PersonQueryBuilder.class})
+@Import({PersonRepositoryImpl.class, PersonQueryBuilder.class, DocumentIdentifierRepositoryImpl.class})
 @DisplayName("PersonRepositoryImpl Search Integration Tests")
 class PersonRepositoryImplSearchTest {
 
@@ -31,14 +34,20 @@ class PersonRepositoryImplSearchTest {
     private static final LocalDateTime DATE_1985 = LocalDateTime.of(1985, 6, 20, 0, 0);
     private static final LocalDateTime DATE_1995 = LocalDateTime.of(1995, 3, 10, 0, 0);
 
+    private DocumentIdentifier diCC;
+    private DocumentIdentifier diTI;
+
     @BeforeEach
     void setUp() {
+        diCC = testEntityManager.persistAndFlush(new DocumentIdentifier("CC", "Colombia"));
+        diTI = testEntityManager.persistAndFlush(new DocumentIdentifier("TI", "Colombia"));
+
         testEntityManager.persistAndFlush(
-                new Person("M", DATE_1990, "Juan", "Perez", "12345678", "CC", "Medellin"));
+                new Person("M", DATE_1990, "Juan", "Perez", "12345678", diCC, "Medellin"));
         testEntityManager.persistAndFlush(
-                new Person("F", DATE_1985, "Maria", "Gonzalez", "87654321", "TI", "Bogota"));
+                new Person("F", DATE_1985, "Maria", "Gonzalez", "87654321", diTI, "Bogota"));
         testEntityManager.persistAndFlush(
-                new Person("M", DATE_1995, "Carlos", "Perez", "11223344", "CC", "Medellin"));
+                new Person("M", DATE_1995, "Carlos", "Perez", "11223344", diCC, "Medellin"));
     }
 
     @Test
@@ -60,8 +69,7 @@ class PersonRepositoryImplSearchTest {
         PersonSearchCriteria criteria = PersonSearchCriteria.builder()
                 .firstName("  ")
                 .lastName("  ")
-                .document("  ")
-                .documentType("  ")
+                .documentNumber("  ")
                 .sex("  ")
                 .city("  ")
                 .build();
@@ -95,18 +103,18 @@ class PersonRepositoryImplSearchTest {
     @Test
     @DisplayName("Should filter by partial document using LIKE")
     void testSearch_WithDocument_ShouldFilterResults() {
-        PersonSearchCriteria criteria = PersonSearchCriteria.builder().document("8765").build();
+        PersonSearchCriteria criteria = PersonSearchCriteria.builder().documentNumber("8765").build();
 
         PagedResult<Person> result = personRepository.search(criteria);
 
         assertEquals(1L, result.getTotalElements());
-        assertEquals("87654321", result.getContent().get(0).getDocument());
+        assertEquals("87654321", result.getContent().get(0).getDocumentNumber());
     }
 
     @Test
-    @DisplayName("Should filter by documentType using case-insensitive exact match")
+    @DisplayName("Should filter by documentIdentifierId using exact match")
     void testSearch_WithDocumentType_ShouldFilterResults() {
-        PersonSearchCriteria criteria = PersonSearchCriteria.builder().documentType("cc").build();
+        PersonSearchCriteria criteria = PersonSearchCriteria.builder().documentIdentifierId(diCC.getId()).build();
 
         PagedResult<Person> result = personRepository.search(criteria);
 
@@ -211,8 +219,8 @@ class PersonRepositoryImplSearchTest {
         PersonSearchCriteria criteria = PersonSearchCriteria.builder()
                 .firstName("Juan")
                 .lastName("Perez")
-                .document("12345678")
-                .documentType("CC")
+                .documentNumber("12345678")
+                .documentIdentifierId(diCC.getId())
                 .sex("M")
                 .city("Medellin")
                 .birthDateFrom(LocalDateTime.of(1989, 1, 1, 0, 0))

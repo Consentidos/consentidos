@@ -4,7 +4,7 @@ import com.veterinaria.consentidos.core.PagedResult;
 import com.veterinaria.consentidos.features.person.application.dto.PersonDto;
 import com.veterinaria.consentidos.features.person.domain.criteria.PersonSearchCriteria;
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
-import com.veterinaria.consentidos.features.person.domain.repository.PersonRepository;
+import com.veterinaria.consentidos.features.documentIdentifier.domain.entity.DocumentIdentifier;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,10 +12,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.veterinaria.consentidos.features.person.domain.repository.PersonRepository;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Collections;
 
+import java.util.Collections;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -36,7 +37,8 @@ class SearchPersonUseCaseTest {
     @DisplayName("Should return mapped paged result when persons are found")
     void testExecute_WithResults_ShouldReturnMappedPagedResult() {
         // Given
-        Person person = new Person("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678", "CC", "Medellin");
+        Person person = new Person("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678",
+                new DocumentIdentifier("CC", "Colombia"), "Medellin");
         person.setId(1L);
         PersonSearchCriteria criteria = PersonSearchCriteria.builder().city("Medellin").build();
         PagedResult<Person> repoResult = PagedResult.of(Arrays.asList(person), 0, 20, 1L);

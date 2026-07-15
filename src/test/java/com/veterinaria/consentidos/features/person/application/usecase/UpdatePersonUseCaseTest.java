@@ -1,5 +1,7 @@
 package com.veterinaria.consentidos.features.person.application.usecase;
 
+import com.veterinaria.consentidos.features.documentIdentifier.domain.entity.DocumentIdentifier;
+import com.veterinaria.consentidos.features.documentIdentifier.domain.repository.DocumentIdentifierRepository;
 import com.veterinaria.consentidos.features.person.application.dto.PersonDto;
 import com.veterinaria.consentidos.features.person.application.command.UpdatePersonCommand;
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
@@ -20,10 +22,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-/**
- * Test class for UpdatePersonUseCase.
- * Tests the business logic for updating existing person information.
- */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UpdatePersonUseCase Tests")
 class UpdatePersonUseCaseTest {
@@ -31,29 +29,40 @@ class UpdatePersonUseCaseTest {
     @Mock
     private PersonRepository personRepository;
 
+    @Mock
+    private DocumentIdentifierRepository documentIdentifierRepository;
+
     @InjectMocks
     private UpdatePersonUseCase updatePersonUseCase;
 
+    private DocumentIdentifier diCC;
+    private DocumentIdentifier diTI;
     private Person existingPerson;
     private UpdatePersonCommand updateCommand;
 
     @BeforeEach
     void setUp() {
-        existingPerson = new Person("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678", "CC", "Medellin");
+        diCC = new DocumentIdentifier("CC", "Colombia");
+        diCC.setId(1L);
+        diTI = new DocumentIdentifier("TI", "Colombia");
+        diTI.setId(2L);
+
+        existingPerson = new Person("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678", diCC, "Medellin");
         existingPerson.setId(1L);
 
-        updateCommand = new UpdatePersonCommand(1L, "F", "Juana", "Martinez", "Bogota", "87654321", "TI");
+        updateCommand = new UpdatePersonCommand(1L, "F", "Juana", "Martinez", "Bogota", "87654321", 2L);
     }
 
     @Test
     @DisplayName("Should update person successfully when person exists and document is unique")
     void testExecute_PersonExistsAndDocumentUnique_ShouldUpdateSuccessfully() {
         // Given
-        Person updatedPerson = new Person("F", existingPerson.getBirthDate(), "Juana", "Martinez", "87654321", "TI", "Bogota");
+        Person updatedPerson = new Person("F", existingPerson.getBirthDate(), "Juana", "Martinez", "87654321", diTI, "Bogota");
         updatedPerson.setId(1L);
-        
+
         when(personRepository.findById(1L)).thenReturn(Optional.of(existingPerson));
         when(personRepository.existsByDocument("87654321")).thenReturn(false);
+        when(documentIdentifierRepository.findById(2L)).thenReturn(Optional.of(diTI));
         when(personRepository.save(any(Person.class))).thenReturn(updatedPerson);
 
         // When
@@ -64,8 +73,9 @@ class UpdatePersonUseCaseTest {
         assertEquals(1L, result.getId());
         assertEquals("Juana", result.getFirstName());
         assertEquals("Martinez", result.getLastName());
-        assertEquals("87654321", result.getDocument());
-        assertEquals("TI", result.getDocumentType());
+        assertEquals("87654321", result.getDocumentNumber());
+        assertNotNull(result.getDocumentIdentifier());
+        assertEquals("TI", result.getDocumentIdentifier().getDocumentType());
         assertEquals("F", result.getSex());
         assertEquals("Bogota", result.getCity());
 
@@ -78,11 +88,12 @@ class UpdatePersonUseCaseTest {
     @DisplayName("Should update person successfully when document is not changed")
     void testExecute_DocumentNotChanged_ShouldUpdateWithoutDocumentCheck() {
         // Given
-        UpdatePersonCommand sameDocumentCommand = new UpdatePersonCommand(1L, "F", "Juana", "Martinez", "Bogota", "12345678", "TI");
-        Person updatedPerson = new Person("F", existingPerson.getBirthDate(), "Juana", "Martinez", "12345678", "TI", "Bogota");
+        UpdatePersonCommand sameDocumentCommand = new UpdatePersonCommand(1L, "F", "Juana", "Martinez", "Bogota", "12345678", 2L);
+        Person updatedPerson = new Person("F", existingPerson.getBirthDate(), "Juana", "Martinez", "12345678", diTI, "Bogota");
         updatedPerson.setId(1L);
-        
+
         when(personRepository.findById(1L)).thenReturn(Optional.of(existingPerson));
+        when(documentIdentifierRepository.findById(2L)).thenReturn(Optional.of(diTI));
         when(personRepository.save(any(Person.class))).thenReturn(updatedPerson);
 
         // When
@@ -90,11 +101,11 @@ class UpdatePersonUseCaseTest {
 
         // Then
         assertNotNull(result);
-        assertEquals("12345678", result.getDocument()); // Same document
-        assertEquals("Juana", result.getFirstName()); // Updated name
-        
+        assertEquals("12345678", result.getDocumentNumber());
+        assertEquals("Juana", result.getFirstName());
+
         verify(personRepository).findById(1L);
-        verify(personRepository, never()).existsByDocument(any(String.class)); // Should not check document existence
+        verify(personRepository, never()).existsByDocument(any(String.class));
         verify(personRepository).save(any(Person.class));
     }
 
@@ -103,8 +114,7 @@ class UpdatePersonUseCaseTest {
     void testExecute_PersonNotFound_ShouldThrowException() {
         // Given
         when(personRepository.findById(999L)).thenReturn(Optional.empty());
-        
-        UpdatePersonCommand invalidCommand = new UpdatePersonCommand(999L, "F", "Test", "User", "City", "12345", "CC");
+        UpdatePersonCommand invalidCommand = new UpdatePersonCommand(999L, "F", "Test", "User", "City", "12345", 1L);
 
         // When & Then
         PersonNotFoundException exception = assertThrows(
@@ -140,13 +150,14 @@ class UpdatePersonUseCaseTest {
     @DisplayName("Should handle all field updates correctly")
     void testExecute_UpdateAllFields_ShouldUpdateAllPersonProperties() {
         // Given
-        Person updatedPerson = new Person("F", existingPerson.getBirthDate(), "Juana", "Martinez", "99999999", "TI", "Cali");
+        Person updatedPerson = new Person("F", existingPerson.getBirthDate(), "Juana", "Martinez", "99999999", diTI, "Cali");
         updatedPerson.setId(1L);
-        
-        UpdatePersonCommand fullUpdateCommand = new UpdatePersonCommand(1L, "F", "Juana", "Martinez", "Cali", "99999999", "TI");
-        
+
+        UpdatePersonCommand fullUpdateCommand = new UpdatePersonCommand(1L, "F", "Juana", "Martinez", "Cali", "99999999", 2L);
+
         when(personRepository.findById(1L)).thenReturn(Optional.of(existingPerson));
         when(personRepository.existsByDocument("99999999")).thenReturn(false);
+        when(documentIdentifierRepository.findById(2L)).thenReturn(Optional.of(diTI));
         when(personRepository.save(any(Person.class))).thenReturn(updatedPerson);
 
         // When
@@ -158,16 +169,15 @@ class UpdatePersonUseCaseTest {
         assertEquals("Juana", result.getFirstName());
         assertEquals("Martinez", result.getLastName());
         assertEquals("Cali", result.getCity());
-        assertEquals("99999999", result.getDocument());
-        assertEquals("TI", result.getDocumentType());
+        assertEquals("99999999", result.getDocumentNumber());
+        assertEquals("TI", result.getDocumentIdentifier().getDocumentType());
 
-        // Verify the person object was updated with all new values
-        verify(personRepository).save(argThat(person -> 
+        verify(personRepository).save(argThat(person ->
             person.getSex().equals("F") &&
             person.getFirstName().equals("Juana") &&
             person.getLastName().equals("Martinez") &&
             person.getCity().equals("Cali") &&
-            person.getDocument().equals("99999999") &&
+            person.getDocumentNumber().equals("99999999") &&
             person.getDocumentType().equals("TI")
         ));
     }
@@ -177,11 +187,12 @@ class UpdatePersonUseCaseTest {
     void testExecute_UpdatePerson_ShouldPreserveBirthDate() {
         // Given
         LocalDateTime originalBirthDate = LocalDateTime.of(1990, 1, 15, 0, 0);
-        Person updatedPerson = new Person("F", originalBirthDate, "Juana", "Martinez", "87654321", "TI", "Bogota");
+        Person updatedPerson = new Person("F", originalBirthDate, "Juana", "Martinez", "87654321", diTI, "Bogota");
         updatedPerson.setId(1L);
-        
+
         when(personRepository.findById(1L)).thenReturn(Optional.of(existingPerson));
         when(personRepository.existsByDocument("87654321")).thenReturn(false);
+        when(documentIdentifierRepository.findById(2L)).thenReturn(Optional.of(diTI));
         when(personRepository.save(any(Person.class))).thenReturn(updatedPerson);
 
         // When
@@ -190,7 +201,7 @@ class UpdatePersonUseCaseTest {
         // Then
         assertNotNull(result);
         assertEquals(originalBirthDate, result.getBirthDate());
-        
+
         verify(personRepository).save(argThat(person -> person.getBirthDate().equals(originalBirthDate)));
     }
 }

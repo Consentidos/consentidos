@@ -23,6 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.veterinaria.consentidos.features.documentIdentifier.domain.entity.DocumentIdentifier;
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
 
 /**
@@ -47,10 +48,15 @@ class PersonRepositoryImplTest {
 
     @BeforeEach
     void setUp() {
-        testPerson = new Person("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678", "CC", "Medellin");
+        DocumentIdentifier diCC = new DocumentIdentifier("CC", "Colombia");
+        diCC.setId(1L);
+        DocumentIdentifier diTI = new DocumentIdentifier("TI", "Colombia");
+        diTI.setId(2L);
+
+        testPerson = new Person("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678", diCC, "Medellin");
         testPerson.setId(1L);
-        
-        anotherPerson = new Person("F", LocalDateTime.of(1985, 6, 20, 0, 0), "Maria", "Gonzalez", "87654321", "TI", "Bogota");
+
+        anotherPerson = new Person("F", LocalDateTime.of(1985, 6, 20, 0, 0), "Maria", "Gonzalez", "87654321", diTI, "Bogota");
         anotherPerson.setId(2L);
     }
 
@@ -66,7 +72,7 @@ class PersonRepositoryImplTest {
         // Then
         assertNotNull(savedPerson);
         assertEquals(testPerson.getId(), savedPerson.getId());
-        assertEquals(testPerson.getDocument(), savedPerson.getDocument());
+        assertEquals(testPerson.getDocumentNumber(), savedPerson.getDocumentNumber());
         verify(personJpaRepository, times(1)).save(testPerson);
     }
 
@@ -83,7 +89,7 @@ class PersonRepositoryImplTest {
         // Then
         assertTrue(foundPerson.isPresent());
         assertEquals(testPerson.getId(), foundPerson.get().getId());
-        assertEquals(testPerson.getDocument(), foundPerson.get().getDocument());
+        assertEquals(testPerson.getDocumentNumber(), foundPerson.get().getDocumentNumber());
         verify(personJpaRepository, times(1)).findById(personId);
     }
 
@@ -107,15 +113,15 @@ class PersonRepositoryImplTest {
     void testFindByDocumentWhenExists() {
         // Given
         String document = "12345678";
-        when(personJpaRepository.findByDocument(document)).thenReturn(Optional.of(testPerson));
+        when(personJpaRepository.findByIdentification_DocumentNumber(document)).thenReturn(Optional.of(testPerson));
 
         // When
         Optional<Person> foundPerson = personRepository.findByDocument(document);
 
         // Then
         assertTrue(foundPerson.isPresent());
-        assertEquals(testPerson.getDocument(), foundPerson.get().getDocument());
-        verify(personJpaRepository, times(1)).findByDocument(document);
+        assertEquals(testPerson.getDocumentNumber(), foundPerson.get().getDocumentNumber());
+        verify(personJpaRepository, times(1)).findByIdentification_DocumentNumber(document);
     }
 
     @Test
@@ -123,14 +129,14 @@ class PersonRepositoryImplTest {
     void testFindByDocumentWhenNotExists() {
         // Given
         String document = "99999999";
-        when(personJpaRepository.findByDocument(document)).thenReturn(Optional.empty());
+        when(personJpaRepository.findByIdentification_DocumentNumber(document)).thenReturn(Optional.empty());
 
         // When
         Optional<Person> foundPerson = personRepository.findByDocument(document);
 
         // Then
         assertFalse(foundPerson.isPresent());
-        verify(personJpaRepository, times(1)).findByDocument(document);
+        verify(personJpaRepository, times(1)).findByIdentification_DocumentNumber(document);
     }
 
     @Test
@@ -190,7 +196,7 @@ class PersonRepositoryImplTest {
         // Given
         String documentType = "CC";
         List<Person> persons = Arrays.asList(testPerson);
-        when(personJpaRepository.findByDocumentTypeIgnoreCase(documentType)).thenReturn(persons);
+        when(personJpaRepository.findByIdentification_DocumentIdentifier_DocumentTypeIgnoreCase(documentType)).thenReturn(persons);
 
         // When
         List<Person> foundPersons = personRepository.findByDocumentType(documentType);
@@ -199,7 +205,7 @@ class PersonRepositoryImplTest {
         assertNotNull(foundPersons);
         assertEquals(1, foundPersons.size());
         assertEquals(testPerson.getDocumentType(), foundPersons.get(0).getDocumentType());
-        verify(personJpaRepository, times(1)).findByDocumentTypeIgnoreCase(documentType);
+        verify(personJpaRepository, times(1)).findByIdentification_DocumentIdentifier_DocumentTypeIgnoreCase(documentType);
     }
 
     @Test
@@ -207,14 +213,14 @@ class PersonRepositoryImplTest {
     void testExistsByDocumentWhenExists() {
         // Given
         String document = "12345678";
-        when(personJpaRepository.existsByDocument(document)).thenReturn(true);
+        when(personJpaRepository.existsByIdentification_DocumentNumber(document)).thenReturn(true);
 
         // When
         boolean exists = personRepository.existsByDocument(document);
 
         // Then
         assertTrue(exists);
-        verify(personJpaRepository, times(1)).existsByDocument(document);
+        verify(personJpaRepository, times(1)).existsByIdentification_DocumentNumber(document);
     }
 
     @Test
@@ -222,14 +228,14 @@ class PersonRepositoryImplTest {
     void testExistsByDocumentWhenNotExists() {
         // Given
         String document = "99999999";
-        when(personJpaRepository.existsByDocument(document)).thenReturn(false);
+        when(personJpaRepository.existsByIdentification_DocumentNumber(document)).thenReturn(false);
 
         // When
         boolean exists = personRepository.existsByDocument(document);
 
         // Then
         assertFalse(exists);
-        verify(personJpaRepository, times(1)).existsByDocument(document);
+        verify(personJpaRepository, times(1)).existsByIdentification_DocumentNumber(document);
     }
 
     @Test
@@ -276,14 +282,14 @@ class PersonRepositoryImplTest {
     @DisplayName("Should handle null document in findByDocument")
     void testFindByDocumentWithNull() {
         // Given
-        when(personJpaRepository.findByDocument(null)).thenReturn(Optional.empty());
+        when(personJpaRepository.findByIdentification_DocumentNumber(null)).thenReturn(Optional.empty());
 
         // When
         Optional<Person> foundPerson = personRepository.findByDocument(null);
 
         // Then
         assertFalse(foundPerson.isPresent());
-        verify(personJpaRepository, times(1)).findByDocument(null);
+        verify(personJpaRepository, times(1)).findByIdentification_DocumentNumber(null);
     }
 
     @Test

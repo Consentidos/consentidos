@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.veterinaria.consentidos.core.PagedResult;
 import com.veterinaria.consentidos.features.person.application.command.CreatePersonCommand;
+import com.veterinaria.consentidos.features.documentIdentifier.application.dto.DocumentIdentifierDto;
 import com.veterinaria.consentidos.features.person.application.dto.PersonDto;
 import com.veterinaria.consentidos.features.person.application.command.UpdatePersonCommand;
 import com.veterinaria.consentidos.features.person.application.usecase.CreatePersonUseCase;
@@ -70,14 +71,15 @@ class PersonControllerTest {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         
-        testPersonDto = new PersonDto(1L, "M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678", "CC", "Medellin");
+        testPersonDto = new PersonDto(1L, "M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678",
+                new DocumentIdentifierDto(1L, "CC", "Colombia"), "Medellin");
     }
 
     @Test
     @DisplayName("POST /api/persons - Should create person successfully")
     void testCreatePerson_ValidCommand_ShouldReturnCreated() throws Exception {
         // Given
-        CreatePersonCommand command = new CreatePersonCommand("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "Medellin", "12345678", "CC");
+        CreatePersonCommand command = new CreatePersonCommand("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "Medellin", "12345678", 1L);
         when(createPersonUseCase.execute(any(CreatePersonCommand.class))).thenReturn(testPersonDto);
 
         // When & Then
@@ -88,7 +90,7 @@ class PersonControllerTest {
                 .andExpect(jsonPath("$.id", is(1)))
                 .andExpect(jsonPath("$.firstName", is("Juan")))
                 .andExpect(jsonPath("$.lastName", is("Perez")))
-                .andExpect(jsonPath("$.document", is("12345678")));
+                .andExpect(jsonPath("$.documentNumber", is("12345678")));
 
         verify(createPersonUseCase).execute(any(CreatePersonCommand.class));
     }
@@ -97,7 +99,7 @@ class PersonControllerTest {
     @DisplayName("POST /api/persons - Should return conflict for duplicate document")
     void testCreatePerson_DuplicateDocument_ShouldReturnConflict() throws Exception {
         // Given
-        CreatePersonCommand command = new CreatePersonCommand("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "Medellin", "12345678", "CC");
+        CreatePersonCommand command = new CreatePersonCommand("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "Medellin", "12345678", 1L);
         when(createPersonUseCase.execute(any(CreatePersonCommand.class)))
                 .thenThrow(new PersonAlreadyExistsException("12345678"));
 
@@ -144,7 +146,8 @@ class PersonControllerTest {
     @DisplayName("GET /api/persons - Should return all persons")
     void testGetAllPersons_NoFilters_ShouldReturnAllPersons() throws Exception {
         // Given
-        PersonDto person2 = new PersonDto(2L, "F", LocalDateTime.of(1985, 6, 20, 0, 0), "Maria", "Gonzalez", "87654321", "TI", "Bogota");
+        PersonDto person2 = new PersonDto(2L, "F", LocalDateTime.of(1985, 6, 20, 0, 0), "Maria", "Gonzalez", "87654321",
+                new DocumentIdentifierDto(2L, "TI", "Colombia"), "Bogota");
         List<PersonDto> persons = Arrays.asList(testPersonDto, person2);
         when(getPersonUseCase.getAll()).thenReturn(persons);
 
@@ -189,7 +192,7 @@ class PersonControllerTest {
         mockMvc.perform(get("/api/persons").param("documentType", "CC"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].documentType", is("CC")));
+                .andExpect(jsonPath("$[0].documentIdentifier.documentType", is("CC")));
 
         verify(getPersonUseCase).getByDocumentType("CC");
         verify(getPersonUseCase, never()).getAll();
@@ -200,8 +203,9 @@ class PersonControllerTest {
     @DisplayName("PUT /api/persons/{id} - Should update person successfully")
     void testUpdatePerson_ValidCommand_ShouldReturnUpdatedPerson() throws Exception {
         // Given
-        UpdatePersonCommand command = new UpdatePersonCommand(1L, "F", "Juana", "Martinez", "Bogota", "87654321", "TI");
-        PersonDto updatedPersonDto = new PersonDto(1L, "F", LocalDateTime.of(1990, 1, 15, 0, 0), "Juana", "Martinez", "87654321", "TI", "Bogota");
+        UpdatePersonCommand command = new UpdatePersonCommand(1L, "F", "Juana", "Martinez", "Bogota", "87654321", 2L);
+        PersonDto updatedPersonDto = new PersonDto(1L, "F", LocalDateTime.of(1990, 1, 15, 0, 0), "Juana", "Martinez", "87654321",
+                new DocumentIdentifierDto(2L, "TI", "Colombia"), "Bogota");
         when(updatePersonUseCase.execute(any(UpdatePersonCommand.class))).thenReturn(updatedPersonDto);
 
         // When & Then
@@ -220,7 +224,7 @@ class PersonControllerTest {
     @DisplayName("PUT /api/persons/{id} - Should return not found when person not found")
     void testUpdatePerson_PersonNotFound_ShouldReturnNotFound() throws Exception {
         // Given
-        UpdatePersonCommand command = new UpdatePersonCommand(999L, "F", "Test", "User", "City", "12345", "CC");
+        UpdatePersonCommand command = new UpdatePersonCommand(999L, "F", "Test", "User", "City", "12345", 1L);
         when(updatePersonUseCase.execute(any(UpdatePersonCommand.class)))
                 .thenThrow(new PersonNotFoundException(999L));
 
@@ -265,7 +269,7 @@ class PersonControllerTest {
     @DisplayName("Should handle unexpected exceptions with internal server error")
     void testCreatePerson_UnexpectedException_ShouldReturnInternalServerError() throws Exception {
         // Given
-        CreatePersonCommand command = new CreatePersonCommand("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "Medellin", "12345678", "CC");
+        CreatePersonCommand command = new CreatePersonCommand("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "Medellin", "12345678", 1L);
         when(createPersonUseCase.execute(any(CreatePersonCommand.class)))
                 .thenThrow(new RuntimeException("Database connection error"));
 

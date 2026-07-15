@@ -36,7 +36,8 @@ class DeletePersonUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        existingPerson = new Person("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678", "CC", "Medellin");
+        existingPerson = new Person("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678",
+                new com.veterinaria.consentidos.features.documentIdentifier.domain.entity.DocumentIdentifier("CC", "Colombia"), "Medellin");
         existingPerson.setId(1L);
     }
 

@@ -1,5 +1,7 @@
 package com.veterinaria.consentidos.features.person.application.usecase;
 
+import com.veterinaria.consentidos.features.documentIdentifier.domain.entity.DocumentIdentifier;
+import com.veterinaria.consentidos.features.documentIdentifier.domain.repository.DocumentIdentifierRepository;
 import com.veterinaria.consentidos.features.person.application.command.CreatePersonCommand;
 import com.veterinaria.consentidos.features.person.application.dto.PersonDto;
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
@@ -14,15 +16,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Test class for CreatePersonUseCase.
- * Tests the business logic for creating new persons.
- */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CreatePersonUseCase Tests")
 class CreatePersonUseCaseTest {
@@ -30,25 +29,32 @@ class CreatePersonUseCaseTest {
     @Mock
     private PersonRepository personRepository;
 
+    @Mock
+    private DocumentIdentifierRepository documentIdentifierRepository;
+
     @InjectMocks
     private CreatePersonUseCase createPersonUseCase;
 
+    private DocumentIdentifier documentIdentifier;
     private CreatePersonCommand validCommand;
     private Person savedPerson;
 
     @BeforeEach
     void setUp() {
+        documentIdentifier = new DocumentIdentifier("CC", "Colombia");
+        documentIdentifier.setId(1L);
+
         validCommand = new CreatePersonCommand(
-            "M", 
-            LocalDateTime.of(1990, 1, 15, 0, 0), 
-            "Juan", 
-            "Perez", 
-            "Medellin", 
-            "12345678", 
-            "CC"
+            "M",
+            LocalDateTime.of(1990, 1, 15, 0, 0),
+            "Juan",
+            "Perez",
+            "Medellin",
+            "12345678",
+            1L
         );
 
-        savedPerson = new Person("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678", "CC", "Medellin");
+        savedPerson = new Person("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678", documentIdentifier, "Medellin");
         savedPerson.setId(1L);
     }
 
@@ -57,6 +63,7 @@ class CreatePersonUseCaseTest {
     void testExecute_ValidCommand_ShouldCreatePerson() {
         // Given
         when(personRepository.existsByDocument("12345678")).thenReturn(false);
+        when(documentIdentifierRepository.findById(1L)).thenReturn(Optional.of(documentIdentifier));
         when(personRepository.save(any(Person.class))).thenReturn(savedPerson);
 
         // When
@@ -69,11 +76,13 @@ class CreatePersonUseCaseTest {
         assertEquals("Juan", result.getFirstName());
         assertEquals("Perez", result.getLastName());
         assertEquals("Medellin", result.getCity());
-        assertEquals("12345678", result.getDocument());
-        assertEquals("CC", result.getDocumentType());
+        assertEquals("12345678", result.getDocumentNumber());
+        assertNotNull(result.getDocumentIdentifier());
+        assertEquals("CC", result.getDocumentIdentifier().getDocumentType());
         assertEquals(LocalDateTime.of(1990, 1, 15, 0, 0), result.getBirthDate());
 
         verify(personRepository).existsByDocument("12345678");
+        verify(documentIdentifierRepository).findById(1L);
         verify(personRepository).save(any(Person.class));
     }
 
@@ -99,18 +108,19 @@ class CreatePersonUseCaseTest {
     void testExecute_ShouldCallRepositoryWithCorrectParameters() {
         // Given
         when(personRepository.existsByDocument("12345678")).thenReturn(false);
+        when(documentIdentifierRepository.findById(1L)).thenReturn(Optional.of(documentIdentifier));
         when(personRepository.save(any(Person.class))).thenReturn(savedPerson);
 
         // When
         createPersonUseCase.execute(validCommand);
 
         // Then
-        verify(personRepository).save(argThat(person -> 
+        verify(personRepository).save(argThat(person ->
             person.getSex().equals("M") &&
             person.getFirstName().equals("Juan") &&
             person.getLastName().equals("Perez") &&
             person.getCity().equals("Medellin") &&
-            person.getDocument().equals("12345678") &&
+            person.getDocumentNumber().equals("12345678") &&
             person.getDocumentType().equals("CC") &&
             person.getBirthDate().equals(LocalDateTime.of(1990, 1, 15, 0, 0))
         ));

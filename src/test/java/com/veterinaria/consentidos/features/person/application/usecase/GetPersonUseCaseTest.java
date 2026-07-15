@@ -1,5 +1,6 @@
 package com.veterinaria.consentidos.features.person.application.usecase;
 
+import com.veterinaria.consentidos.features.documentIdentifier.domain.entity.DocumentIdentifier;
 import com.veterinaria.consentidos.features.person.application.dto.PersonDto;
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
 import com.veterinaria.consentidos.features.person.domain.exception.PersonNotFoundException;
@@ -40,10 +41,15 @@ class GetPersonUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        testPerson1 = new Person("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678", "CC", "Medellin");
+        DocumentIdentifier di1 = new DocumentIdentifier("CC", "Colombia");
+        di1.setId(1L);
+        DocumentIdentifier di2 = new DocumentIdentifier("TI", "Colombia");
+        di2.setId(2L);
+
+        testPerson1 = new Person("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678", di1, "Medellin");
         testPerson1.setId(1L);
 
-        testPerson2 = new Person("F", LocalDateTime.of(1985, 6, 20, 0, 0), "Maria", "Gonzalez", "87654321", "TI", "Bogota");
+        testPerson2 = new Person("F", LocalDateTime.of(1985, 6, 20, 0, 0), "Maria", "Gonzalez", "87654321", di2, "Bogota");
         testPerson2.setId(2L);
     }
 
@@ -61,7 +67,7 @@ class GetPersonUseCaseTest {
         assertEquals(1L, result.getId());
         assertEquals("Juan", result.getFirstName());
         assertEquals("Perez", result.getLastName());
-        assertEquals("12345678", result.getDocument());
+        assertEquals("12345678", result.getDocumentNumber());
         
         verify(personRepository).findById(1L);
     }
@@ -158,7 +164,7 @@ class GetPersonUseCaseTest {
         // Then
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals("CC", result.get(0).getDocumentType());
+        assertEquals("CC", result.get(0).getDocumentIdentifier().getDocumentType());
         
         verify(personRepository).findByDocumentType("CC");
     }
