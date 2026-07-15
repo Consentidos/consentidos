@@ -57,7 +57,7 @@ class DeletePersonUseCaseTest {
 
     @Test
     @DisplayName("Should throw PersonNotFoundException when person does not exist")
-    void testExecute_PersonNotFound_ShouldThrowException() {
+    void testExecutePersonNotFoundShouldThrowException() {
         // Given
         when(personRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -116,7 +116,7 @@ class DeletePersonUseCaseTest {
 
     @Test
     @DisplayName("Should throw PersonNotFoundException when trying to delete with null ID")
-    void testExecute_NullId_ShouldThrowException() {
+    void testExecuteNullIdShouldThrowException() {
         // Given
         when(personRepository.findById(null)).thenReturn(Optional.empty());
 

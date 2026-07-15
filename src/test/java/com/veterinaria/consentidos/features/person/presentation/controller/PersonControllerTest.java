@@ -25,6 +25,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -44,6 +45,12 @@ import static org.hamcrest.Matchers.is;
 @WebMvcTest(PersonController.class)
 @DisplayName("PersonController Tests")
 class PersonControllerTest {
+
+    private static final String DOC_NUMBER = "12345678";
+    private static final String LAST_PEREZ = "Perez";
+    private static final String CITY_MEDELLIN = "Medellin";
+    private static final String COUNTRY_COLOMBIA = "Colombia";
+    private static final LocalDateTime DATE_BIRTH = LocalDateTime.of(1990, Month.JANUARY, 15, 0, 0);
 
     @Autowired
     private MockMvc mockMvc;
@@ -71,15 +78,15 @@ class PersonControllerTest {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         
-        testPersonDto = new PersonDto(1L, "M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678",
-                new DocumentIdentifierDto(1L, "CC", "Colombia"), "Medellin");
+        testPersonDto = new PersonDto(1L, "M", DATE_BIRTH, "Juan", LAST_PEREZ, DOC_NUMBER,
+                new DocumentIdentifierDto(1L, "CC", COUNTRY_COLOMBIA), CITY_MEDELLIN);
     }
 
     @Test
     @DisplayName("POST /api/persons - Should create person successfully")
     void testCreatePerson_ValidCommand_ShouldReturnCreated() throws Exception {
         // Given
-        CreatePersonCommand command = new CreatePersonCommand("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "Medellin", "12345678", 1L);
+        CreatePersonCommand command = new CreatePersonCommand("M", DATE_BIRTH, "Juan", LAST_PEREZ, CITY_MEDELLIN, DOC_NUMBER, 1L);
         when(createPersonUseCase.execute(any(CreatePersonCommand.class))).thenReturn(testPersonDto);
 
         // When & Then
@@ -89,19 +96,19 @@ class PersonControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id", is(1)))
                 .andExpect(jsonPath("$.firstName", is("Juan")))
-                .andExpect(jsonPath("$.lastName", is("Perez")))
-                .andExpect(jsonPath("$.documentNumber", is("12345678")));
+                .andExpect(jsonPath("$.lastName", is(LAST_PEREZ)))
+                .andExpect(jsonPath("$.documentNumber", is(DOC_NUMBER)));
 
         verify(createPersonUseCase).execute(any(CreatePersonCommand.class));
     }
 
     @Test
     @DisplayName("POST /api/persons - Should return conflict for duplicate document")
-    void testCreatePerson_DuplicateDocument_ShouldReturnConflict() throws Exception {
+    void testCreatePersonDuplicateDocumentShouldReturnConflict() throws Exception {
         // Given
-        CreatePersonCommand command = new CreatePersonCommand("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "Medellin", "12345678", 1L);
+        CreatePersonCommand command = new CreatePersonCommand("M", DATE_BIRTH, "Juan", LAST_PEREZ, CITY_MEDELLIN, DOC_NUMBER, 1L);
         when(createPersonUseCase.execute(any(CreatePersonCommand.class)))
-                .thenThrow(new PersonAlreadyExistsException("12345678"));
+                .thenThrow(new PersonAlreadyExistsException(DOC_NUMBER));
 
         // When & Then
         mockMvc.perform(post("/api/persons")
@@ -124,7 +131,7 @@ class PersonControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(1)))
                 .andExpect(jsonPath("$.firstName", is("Juan")))
-                .andExpect(jsonPath("$.lastName", is("Perez")));
+                .andExpect(jsonPath("$.lastName", is(LAST_PEREZ)));
 
         verify(getPersonUseCase).getById(1L);
     }
@@ -146,8 +153,8 @@ class PersonControllerTest {
     @DisplayName("GET /api/persons - Should return all persons")
     void testGetAllPersons_NoFilters_ShouldReturnAllPersons() throws Exception {
         // Given
-        PersonDto person2 = new PersonDto(2L, "F", LocalDateTime.of(1985, 6, 20, 0, 0), "Maria", "Gonzalez", "87654321",
-                new DocumentIdentifierDto(2L, "TI", "Colombia"), "Bogota");
+        PersonDto person2 = new PersonDto(2L, "F", LocalDateTime.of(1985, Month.JUNE, 20, 0, 0), "Maria", "Gonzalez", "87654321",
+                new DocumentIdentifierDto(2L, "TI", COUNTRY_COLOMBIA), "Bogota");
         List<PersonDto> persons = Arrays.asList(testPersonDto, person2);
         when(getPersonUseCase.getAll()).thenReturn(persons);
 
@@ -168,15 +175,15 @@ class PersonControllerTest {
     void testGetAllPersons_FilterByCity_ShouldReturnFilteredPersons() throws Exception {
         // Given
         List<PersonDto> persons = Arrays.asList(testPersonDto);
-        when(getPersonUseCase.getByCity("Medellin")).thenReturn(persons);
+        when(getPersonUseCase.getByCity(CITY_MEDELLIN)).thenReturn(persons);
 
         // When & Then
-        mockMvc.perform(get("/api/persons").param("city", "Medellin"))
+        mockMvc.perform(get("/api/persons").param("city", CITY_MEDELLIN))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].city", is("Medellin")));
+                .andExpect(jsonPath("$[0].city", is(CITY_MEDELLIN)));
 
-        verify(getPersonUseCase).getByCity("Medellin");
+        verify(getPersonUseCase).getByCity(CITY_MEDELLIN);
         verify(getPersonUseCase, never()).getAll();
         verify(getPersonUseCase, never()).getByDocumentType(any());
     }
@@ -204,8 +211,8 @@ class PersonControllerTest {
     void testUpdatePerson_ValidCommand_ShouldReturnUpdatedPerson() throws Exception {
         // Given
         UpdatePersonCommand command = new UpdatePersonCommand(1L, "F", "Juana", "Martinez", "Bogota", "87654321", 2L);
-        PersonDto updatedPersonDto = new PersonDto(1L, "F", LocalDateTime.of(1990, 1, 15, 0, 0), "Juana", "Martinez", "87654321",
-                new DocumentIdentifierDto(2L, "TI", "Colombia"), "Bogota");
+        PersonDto updatedPersonDto = new PersonDto(1L, "F", DATE_BIRTH, "Juana", "Martinez", "87654321",
+                new DocumentIdentifierDto(2L, "TI", COUNTRY_COLOMBIA), "Bogota");
         when(updatePersonUseCase.execute(any(UpdatePersonCommand.class))).thenReturn(updatedPersonDto);
 
         // When & Then
@@ -222,7 +229,7 @@ class PersonControllerTest {
 
     @Test
     @DisplayName("PUT /api/persons/{id} - Should return not found when person not found")
-    void testUpdatePerson_PersonNotFound_ShouldReturnNotFound() throws Exception {
+    void testUpdatePersonPersonNotFoundShouldReturnNotFound() throws Exception {
         // Given
         UpdatePersonCommand command = new UpdatePersonCommand(999L, "F", "Test", "User", "City", "12345", 1L);
         when(updatePersonUseCase.execute(any(UpdatePersonCommand.class)))
@@ -269,7 +276,7 @@ class PersonControllerTest {
     @DisplayName("Should handle unexpected exceptions with internal server error")
     void testCreatePerson_UnexpectedException_ShouldReturnInternalServerError() throws Exception {
         // Given
-        CreatePersonCommand command = new CreatePersonCommand("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "Medellin", "12345678", 1L);
+        CreatePersonCommand command = new CreatePersonCommand("M", DATE_BIRTH, "Juan", LAST_PEREZ, CITY_MEDELLIN, DOC_NUMBER, 1L);
         when(createPersonUseCase.execute(any(CreatePersonCommand.class)))
                 .thenThrow(new RuntimeException("Database connection error"));
 
@@ -285,9 +292,9 @@ class PersonControllerTest {
 
     @Test
     @DisplayName("POST /api/persons/search - Should return paged result")
-    void testSearchPersons_ValidCriteria_ShouldReturnPagedResult() throws Exception {
+    void testSearchPersonsValidCriteriaShouldReturnPagedResult() throws Exception {
         // Given
-        PersonSearchCriteria criteria = PersonSearchCriteria.builder().city("Medellin").page(0).size(10).build();
+        PersonSearchCriteria criteria = PersonSearchCriteria.builder().city(CITY_MEDELLIN).page(0).size(10).build();
         PagedResult<PersonDto> pagedResult = PagedResult.of(
                 Collections.singletonList(testPersonDto), 0, 10, 1L);
         when(searchPersonUseCase.execute(any(PersonSearchCriteria.class))).thenReturn(pagedResult);
@@ -308,7 +315,7 @@ class PersonControllerTest {
 
     @Test
     @DisplayName("POST /api/persons/search - Should return internal server error on exception")
-    void testSearchPersons_UnexpectedException_ShouldReturnInternalServerError() throws Exception {
+    void testSearchPersonsUnexpectedExceptionShouldReturnInternalServerError() throws Exception {
         // Given
         PersonSearchCriteria criteria = new PersonSearchCriteria();
         when(searchPersonUseCase.execute(any(PersonSearchCriteria.class)))

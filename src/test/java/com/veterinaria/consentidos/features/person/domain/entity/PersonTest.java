@@ -2,6 +2,7 @@ package com.veterinaria.consentidos.features.person.domain.entity;
 
 import com.veterinaria.consentidos.features.documentIdentifier.domain.entity.DocumentIdentifier;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,6 +27,16 @@ class PersonTest {
 
     private static final DocumentIdentifier DI_CC = new DocumentIdentifier("CC", "Colombia");
     private static final DocumentIdentifier DI_TI = new DocumentIdentifier("TI", "Colombia");
+    private static final String DOC_JUAN = "12345678";
+    private static final String DOC_MARIA = "87654321";
+    private static final String CITY_MEDELLIN = "Medellin";
+    private static final String CITY_BOGOTA = "Bogota";
+    private static final String FIRST_JUAN = "Juan";
+    private static final String FIRST_MARIA = "Maria";
+    private static final String LAST_PEREZ = "Perez";
+    private static final String LAST_GONZALEZ = "Gonzalez";
+    private static final LocalDateTime DATE_1990 = LocalDateTime.of(1990, Month.JANUARY, 15, 0, 0);
+    private static final LocalDateTime DATE_1985 = LocalDateTime.of(1985, Month.JUNE, 20, 0, 0);
 
     private Validator validator;
 
@@ -52,21 +63,21 @@ class PersonTest {
     @Test
     @DisplayName("Should create person with parameterized constructor")
     void testParameterizedConstructor() {
-        Person person = new Person("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678", DI_CC, "Medellin");
+        Person person = new Person("M", DATE_1990, FIRST_JUAN, LAST_PEREZ, DOC_JUAN, DI_CC, CITY_MEDELLIN);
 
         assertNull(person.getId());
         assertEquals("M", person.getSex());
-        assertEquals("Juan", person.getFirstName());
-        assertEquals("Perez", person.getLastName());
-        assertEquals("Medellin", person.getCity());
-        assertEquals("12345678", person.getDocumentNumber());
+        assertEquals(FIRST_JUAN, person.getFirstName());
+        assertEquals(LAST_PEREZ, person.getLastName());
+        assertEquals(CITY_MEDELLIN, person.getCity());
+        assertEquals(DOC_JUAN, person.getDocumentNumber());
         assertEquals("CC", person.getDocumentType());
     }
 
     @Test
     @DisplayName("Should validate valid person without violations")
     void testValidPersonValidation() {
-        Person person = new Person("F", LocalDateTime.of(1985, 6, 20, 0, 0), "Maria", "Gonzalez", "87654321", DI_TI, "Bogota");
+        Person person = new Person("F", DATE_1985, FIRST_MARIA, LAST_GONZALEZ, DOC_MARIA, DI_TI, CITY_BOGOTA);
         
         Set<ConstraintViolation<Person>> violations = validator.validate(person);
         assertTrue(violations.isEmpty());
@@ -75,7 +86,7 @@ class PersonTest {
     @Test
     @DisplayName("Should reject invalid sex values")
     void testInvalidSexValidation() {
-        Person person = new Person("X", LocalDateTime.of(1985, 6, 20, 0, 0), "Maria", "Gonzalez", "87654321", DI_TI, "Bogota");
+        Person person = new Person("X", DATE_1985, FIRST_MARIA, LAST_GONZALEZ, DOC_MARIA, DI_TI, CITY_BOGOTA);
         
         Set<ConstraintViolation<Person>> violations = validator.validate(person);
         assertEquals(1, violations.size());
@@ -88,7 +99,7 @@ class PersonTest {
     @Test
     @DisplayName("Should reject blank sex")
     void testBlankSexValidation() {
-        Person person = new Person("", LocalDateTime.of(1985, 6, 20, 0, 0), "Maria", "Gonzalez", "87654321", DI_TI, "Bogota");
+        Person person = new Person("", DATE_1985, FIRST_MARIA, LAST_GONZALEZ, DOC_MARIA, DI_TI, CITY_BOGOTA);
         
         Set<ConstraintViolation<Person>> violations = validator.validate(person);
         assertEquals(2, violations.size()); // NotBlank and Pattern violations
@@ -97,7 +108,7 @@ class PersonTest {
     @Test
     @DisplayName("Should reject null sex")
     void testNullSexValidation() {
-        Person person = new Person(null, LocalDateTime.of(1985, 6, 20, 0, 0), "Maria", "Gonzalez", "87654321", DI_TI, "Bogota");
+        Person person = new Person(null, DATE_1985, FIRST_MARIA, LAST_GONZALEZ, DOC_MARIA, DI_TI, CITY_BOGOTA);
         
         Set<ConstraintViolation<Person>> violations = validator.validate(person);
         assertEquals(1, violations.size());
@@ -109,7 +120,7 @@ class PersonTest {
     @Test
     @DisplayName("Should reject blank first name")
     void testBlankFirstNameValidation() {
-        Person person = new Person("F", LocalDateTime.of(1985, 6, 20, 0, 0), "", "Gonzalez", "87654321", DI_TI, "Bogota");
+        Person person = new Person("F", DATE_1985, "", LAST_GONZALEZ, DOC_MARIA, DI_TI, CITY_BOGOTA);
         
         Set<ConstraintViolation<Person>> violations = validator.validate(person);
         assertEquals(1, violations.size());
@@ -121,7 +132,7 @@ class PersonTest {
     @Test
     @DisplayName("Should reject blank last name")
     void testBlankLastNameValidation() {
-        Person person = new Person("F", LocalDateTime.of(1985, 6, 20, 0, 0), "Maria", "", "87654321", DI_TI, "Bogota");
+        Person person = new Person("F", DATE_1985, FIRST_MARIA, "", DOC_MARIA, DI_TI, CITY_BOGOTA);
         
         Set<ConstraintViolation<Person>> violations = validator.validate(person);
         assertEquals(1, violations.size());
@@ -136,7 +147,7 @@ class PersonTest {
         Person person = new Person();
         
         person.setId(1L);
-        person.setBirthDate(LocalDateTime.of(1990, 1, 15, 0, 0));
+        person.setBirthDate(DATE_1990);
         person.setSex("M");
         person.setFirstName("Carlos");
         person.setLastName("Rodriguez");
@@ -145,7 +156,7 @@ class PersonTest {
         person.setDocumentIdentifier(DI_CC);
 
         assertEquals(1L, person.getId());
-        assertEquals(LocalDateTime.of(1990, 1, 15, 0, 0), person.getBirthDate());
+        assertEquals(DATE_1990, person.getBirthDate());
         assertEquals("M", person.getSex());
         assertEquals("Carlos", person.getFirstName());
         assertEquals("Rodriguez", person.getLastName());
@@ -157,21 +168,21 @@ class PersonTest {
     @Test
     @DisplayName("Should be equal to same object")
     void testEqualsSameObject() {
-        Person person = new Person("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678", DI_CC, "Medellin");
+        Person person = new Person("M", DATE_1990, FIRST_JUAN, LAST_PEREZ, DOC_JUAN, DI_CC, CITY_MEDELLIN);
         assertEquals(person, person);
     }
 
     @Test
     @DisplayName("Should not be equal to null")
     void testEqualsWithNull() {
-        Person person = new Person("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678", DI_CC, "Medellin");
+        Person person = new Person("M", DATE_1990, FIRST_JUAN, LAST_PEREZ, DOC_JUAN, DI_CC, CITY_MEDELLIN);
         assertNotEquals(person, null);
     }
 
     @Test
     @DisplayName("Should not be equal to object of different class")
     void testEqualsWithDifferentClass() {
-        Person person = new Person("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678", DI_CC, "Medellin");
+        Person person = new Person("M", DATE_1990, FIRST_JUAN, LAST_PEREZ, DOC_JUAN, DI_CC, CITY_MEDELLIN);
         String otherObject = "Not a Person";
         assertNotEquals(person, otherObject);
     }
@@ -179,8 +190,8 @@ class PersonTest {
     @Test
     @DisplayName("Should be equal when documents are same")
     void testEqualsWithSameDocument() {
-        Person person1 = new Person("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678", DI_CC, "Medellin");
-        Person person2 = new Person("F", LocalDateTime.of(1985, 6, 20, 0, 0), "Maria", "Gonzalez", "12345678", DI_CC, "Bogota");
+        Person person1 = new Person("M", DATE_1990, FIRST_JUAN, LAST_PEREZ, DOC_JUAN, DI_CC, CITY_MEDELLIN);
+        Person person2 = new Person("F", DATE_1985, FIRST_MARIA, LAST_GONZALEZ, DOC_JUAN, DI_CC, CITY_BOGOTA);
         
         assertEquals(person1, person2);
     }
@@ -188,8 +199,8 @@ class PersonTest {
     @Test
     @DisplayName("Should not be equal when documents are different")
     void testEqualsWithDifferentDocument() {
-        Person person1 = new Person("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678", DI_CC, "Medellin");
-        Person person2 = new Person("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "87654321", DI_TI, "Medellin");
+        Person person1 = new Person("M", DATE_1990, FIRST_JUAN, LAST_PEREZ, DOC_JUAN, DI_CC, CITY_MEDELLIN);
+        Person person2 = new Person("M", DATE_1990, FIRST_JUAN, LAST_PEREZ, DOC_MARIA, DI_TI, CITY_MEDELLIN);
         
         assertNotEquals(person1, person2);
     }
@@ -197,7 +208,7 @@ class PersonTest {
     @Test
     @DisplayName("Should have consistent hashCode")
     void testHashCodeConsistency() {
-        Person person = new Person("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678", DI_CC, "Medellin");
+        Person person = new Person("M", DATE_1990, FIRST_JUAN, LAST_PEREZ, DOC_JUAN, DI_CC, CITY_MEDELLIN);
         int hashCode1 = person.hashCode();
         int hashCode2 = person.hashCode();
         
@@ -207,8 +218,8 @@ class PersonTest {
     @Test
     @DisplayName("Should have same hashCode for same document")
     void testHashCodeWithSameDocument() {
-        Person person1 = new Person("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678", DI_CC, "Medellin");
-        Person person2 = new Person("F", LocalDateTime.of(1985, 6, 20, 0, 0), "Maria", "Gonzalez", "12345678", DI_CC, "Bogota");
+        Person person1 = new Person("M", DATE_1990, FIRST_JUAN, LAST_PEREZ, DOC_JUAN, DI_CC, CITY_MEDELLIN);
+        Person person2 = new Person("F", DATE_1985, FIRST_MARIA, LAST_GONZALEZ, DOC_JUAN, DI_CC, CITY_BOGOTA);
         
         assertEquals(person1.hashCode(), person2.hashCode());
     }
@@ -216,8 +227,8 @@ class PersonTest {
     @Test
     @DisplayName("Should not have same hashCode for different documents")
     void testHashCodeWithDifferentDocument() {
-        Person person1 = new Person("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678", DI_CC, "Medellin");
-        Person person2 = new Person("F", LocalDateTime.of(1985, 6, 20, 0, 0), "Maria", "Gonzalez", "87654321", DI_TI, "Bogota");
+        Person person1 = new Person("M", DATE_1990, FIRST_JUAN, LAST_PEREZ, DOC_JUAN, DI_CC, CITY_MEDELLIN);
+        Person person2 = new Person("F", DATE_1985, FIRST_MARIA, LAST_GONZALEZ, DOC_MARIA, DI_TI, CITY_BOGOTA);
 
         assertNotEquals(person1.hashCode(), person2.hashCode());
     }

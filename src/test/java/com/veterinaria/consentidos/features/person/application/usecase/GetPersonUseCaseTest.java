@@ -74,7 +74,7 @@ class GetPersonUseCaseTest {
 
     @Test
     @DisplayName("Should throw PersonNotFoundException when person does not exist by ID")
-    void testGetById_PersonNotExists_ShouldThrowException() {
+    void testGetByIdPersonNotExistsShouldThrowException() {
         // Given
         when(personRepository.findById(999L)).thenReturn(Optional.empty());
 

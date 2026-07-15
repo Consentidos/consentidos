@@ -35,14 +35,13 @@ class UpdatePersonUseCaseTest {
     @InjectMocks
     private UpdatePersonUseCase updatePersonUseCase;
 
-    private DocumentIdentifier diCC;
     private DocumentIdentifier diTI;
     private Person existingPerson;
     private UpdatePersonCommand updateCommand;
 
     @BeforeEach
     void setUp() {
-        diCC = new DocumentIdentifier("CC", "Colombia");
+        DocumentIdentifier diCC = new DocumentIdentifier("CC", "Colombia");
         diCC.setId(1L);
         diTI = new DocumentIdentifier("TI", "Colombia");
         diTI.setId(2L);

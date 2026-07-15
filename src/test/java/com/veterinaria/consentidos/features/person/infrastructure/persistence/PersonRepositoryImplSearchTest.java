@@ -15,6 +15,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
 
 import java.time.LocalDateTime;
+import java.time.Month;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -30,29 +31,31 @@ class PersonRepositoryImplSearchTest {
     @Autowired
     private PersonRepositoryImpl personRepository;
 
-    private static final LocalDateTime DATE_1990 = LocalDateTime.of(1990, 1, 15, 0, 0);
-    private static final LocalDateTime DATE_1985 = LocalDateTime.of(1985, 6, 20, 0, 0);
-    private static final LocalDateTime DATE_1995 = LocalDateTime.of(1995, 3, 10, 0, 0);
+    private static final LocalDateTime DATE_1990 = LocalDateTime.of(1990, Month.JANUARY, 15, 0, 0);
+    private static final LocalDateTime DATE_1985 = LocalDateTime.of(1985, Month.JUNE, 20, 0, 0);
+    private static final LocalDateTime DATE_1995 = LocalDateTime.of(1995, Month.MARCH, 10, 0, 0);
+    private static final String CITY_MEDELLIN = "Medellin";
+    private static final String CITY_BOGOTA = "Bogota";
+    private static final String LAST_PEREZ = "Perez";
 
     private DocumentIdentifier diCC;
-    private DocumentIdentifier diTI;
 
     @BeforeEach
     void setUp() {
         diCC = testEntityManager.persistAndFlush(new DocumentIdentifier("CC", "Colombia"));
-        diTI = testEntityManager.persistAndFlush(new DocumentIdentifier("TI", "Colombia"));
+        DocumentIdentifier diTI = testEntityManager.persistAndFlush(new DocumentIdentifier("TI", "Colombia"));
 
         testEntityManager.persistAndFlush(
-                new Person("M", DATE_1990, "Juan", "Perez", "12345678", diCC, "Medellin"));
+                new Person("M", DATE_1990, "Juan", LAST_PEREZ, "12345678", diCC, CITY_MEDELLIN));
         testEntityManager.persistAndFlush(
-                new Person("F", DATE_1985, "Maria", "Gonzalez", "87654321", diTI, "Bogota"));
+                new Person("F", DATE_1985, "Maria", "Gonzalez", "87654321", diTI, CITY_BOGOTA));
         testEntityManager.persistAndFlush(
-                new Person("M", DATE_1995, "Carlos", "Perez", "11223344", diCC, "Medellin"));
+                new Person("M", DATE_1995, "Carlos", LAST_PEREZ, "11223344", diCC, CITY_MEDELLIN));
     }
 
     @Test
     @DisplayName("Should return all persons when all criteria fields are null")
-    void testSearch_NullCriteria_ShouldReturnAllPersons() {
+    void testSearchNullCriteriaShouldReturnAllPersons() {
         PersonSearchCriteria criteria = new PersonSearchCriteria();
 
         PagedResult<Person> result = personRepository.search(criteria);
@@ -65,7 +68,7 @@ class PersonRepositoryImplSearchTest {
 
     @Test
     @DisplayName("Should return all persons when all text criteria fields are blank")
-    void testSearch_BlankCriteria_ShouldReturnAllPersons() {
+    void testSearchBlankCriteriaShouldReturnAllPersons() {
         PersonSearchCriteria criteria = PersonSearchCriteria.builder()
                 .firstName("  ")
                 .lastName("  ")
@@ -81,7 +84,7 @@ class PersonRepositoryImplSearchTest {
 
     @Test
     @DisplayName("Should filter by firstName using case-insensitive LIKE")
-    void testSearch_WithFirstName_ShouldFilterResults() {
+    void testSearchWithFirstNameShouldFilterResults() {
         PersonSearchCriteria criteria = PersonSearchCriteria.builder().firstName("JUAN").build();
 
         PagedResult<Person> result = personRepository.search(criteria);
@@ -92,7 +95,7 @@ class PersonRepositoryImplSearchTest {
 
     @Test
     @DisplayName("Should filter by lastName using case-insensitive LIKE and match multiple persons")
-    void testSearch_WithLastName_ShouldFilterResults() {
+    void testSearchWithLastNameShouldFilterResults() {
         PersonSearchCriteria criteria = PersonSearchCriteria.builder().lastName("perez").build();
 
         PagedResult<Person> result = personRepository.search(criteria);
@@ -102,7 +105,7 @@ class PersonRepositoryImplSearchTest {
 
     @Test
     @DisplayName("Should filter by partial document using LIKE")
-    void testSearch_WithDocument_ShouldFilterResults() {
+    void testSearchWithDocumentShouldFilterResults() {
         PersonSearchCriteria criteria = PersonSearchCriteria.builder().documentNumber("8765").build();
 
         PagedResult<Person> result = personRepository.search(criteria);
@@ -113,7 +116,7 @@ class PersonRepositoryImplSearchTest {
 
     @Test
     @DisplayName("Should filter by documentIdentifierId using exact match")
-    void testSearch_WithDocumentType_ShouldFilterResults() {
+    void testSearchWithDocumentTypeShouldFilterResults() {
         PersonSearchCriteria criteria = PersonSearchCriteria.builder().documentIdentifierId(diCC.getId()).build();
 
         PagedResult<Person> result = personRepository.search(criteria);
@@ -123,7 +126,7 @@ class PersonRepositoryImplSearchTest {
 
     @Test
     @DisplayName("Should filter by sex using exact match")
-    void testSearch_WithSex_ShouldFilterResults() {
+    void testSearchWithSexShouldFilterResults() {
         PersonSearchCriteria criteria = PersonSearchCriteria.builder().sex("F").build();
 
         PagedResult<Person> result = personRepository.search(criteria);
@@ -134,20 +137,20 @@ class PersonRepositoryImplSearchTest {
 
     @Test
     @DisplayName("Should filter by city using case-insensitive LIKE")
-    void testSearch_WithCity_ShouldFilterResults() {
+    void testSearchWithCityShouldFilterResults() {
         PersonSearchCriteria criteria = PersonSearchCriteria.builder().city("BOGOTA").build();
 
         PagedResult<Person> result = personRepository.search(criteria);
 
         assertEquals(1L, result.getTotalElements());
-        assertEquals("Bogota", result.getContent().get(0).getCity());
+        assertEquals(CITY_BOGOTA, result.getContent().get(0).getCity());
     }
 
     @Test
     @DisplayName("Should filter by birthDateFrom (greaterThanOrEqualTo)")
-    void testSearch_WithBirthDateFrom_ShouldFilterResults() {
+    void testSearchWithBirthDateFromShouldFilterResults() {
         PersonSearchCriteria criteria = PersonSearchCriteria.builder()
-                .birthDateFrom(LocalDateTime.of(1990, 1, 1, 0, 0))
+                .birthDateFrom(LocalDateTime.of(1990, Month.JANUARY, 1, 0, 0))
                 .build();
 
         PagedResult<Person> result = personRepository.search(criteria);
@@ -157,9 +160,9 @@ class PersonRepositoryImplSearchTest {
 
     @Test
     @DisplayName("Should filter by birthDateTo (lessThanOrEqualTo)")
-    void testSearch_WithBirthDateTo_ShouldFilterResults() {
+    void testSearchWithBirthDateToShouldFilterResults() {
         PersonSearchCriteria criteria = PersonSearchCriteria.builder()
-                .birthDateTo(LocalDateTime.of(1987, 12, 31, 0, 0))
+                .birthDateTo(LocalDateTime.of(1987, Month.DECEMBER, 31, 0, 0))
                 .build();
 
         PagedResult<Person> result = personRepository.search(criteria);
@@ -170,10 +173,10 @@ class PersonRepositoryImplSearchTest {
 
     @Test
     @DisplayName("Should filter by birthDate range combining from and to")
-    void testSearch_WithBirthDateRange_ShouldFilterResults() {
+    void testSearchWithBirthDateRangeShouldFilterResults() {
         PersonSearchCriteria criteria = PersonSearchCriteria.builder()
-                .birthDateFrom(LocalDateTime.of(1989, 1, 1, 0, 0))
-                .birthDateTo(LocalDateTime.of(1993, 12, 31, 0, 0))
+                .birthDateFrom(LocalDateTime.of(1989, Month.JANUARY, 1, 0, 0))
+                .birthDateTo(LocalDateTime.of(1993, Month.DECEMBER, 31, 0, 0))
                 .build();
 
         PagedResult<Person> result = personRepository.search(criteria);
@@ -184,7 +187,7 @@ class PersonRepositoryImplSearchTest {
 
     @Test
     @DisplayName("Should return correct page and calculate totalPages for paginated results")
-    void testSearch_WithPagination_ShouldReturnCorrectPage() {
+    void testSearchWithPaginationShouldReturnCorrectPage() {
         PersonSearchCriteria criteria = PersonSearchCriteria.builder()
                 .page(1)
                 .size(2)
@@ -201,7 +204,7 @@ class PersonRepositoryImplSearchTest {
 
     @Test
     @DisplayName("Should return empty content when page is beyond available results")
-    void testSearch_WithPageBeyondResults_ShouldReturnEmptyContent() {
+    void testSearchWithPageBeyondResultsShouldReturnEmptyContent() {
         PersonSearchCriteria criteria = PersonSearchCriteria.builder()
                 .page(10)
                 .size(20)
@@ -215,16 +218,16 @@ class PersonRepositoryImplSearchTest {
 
     @Test
     @DisplayName("Should apply all criteria simultaneously")
-    void testSearch_WithAllCriteria_ShouldApplyAllFilters() {
+    void testSearchWithAllCriteriaShouldApplyAllFilters() {
         PersonSearchCriteria criteria = PersonSearchCriteria.builder()
                 .firstName("Juan")
-                .lastName("Perez")
+                .lastName(LAST_PEREZ)
                 .documentNumber("12345678")
                 .documentIdentifierId(diCC.getId())
                 .sex("M")
-                .city("Medellin")
-                .birthDateFrom(LocalDateTime.of(1989, 1, 1, 0, 0))
-                .birthDateTo(LocalDateTime.of(1991, 12, 31, 0, 0))
+                .city(CITY_MEDELLIN)
+                .birthDateFrom(LocalDateTime.of(1989, Month.JANUARY, 1, 0, 0))
+                .birthDateTo(LocalDateTime.of(1991, Month.DECEMBER, 31, 0, 0))
                 .build();
 
         PagedResult<Person> result = personRepository.search(criteria);
