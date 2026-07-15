@@ -35,6 +35,7 @@ public final class PersonValidationConstants {
     public static final String CITY_SIZE_MESSAGE = "City must not exceed " + CITY_MAX_LENGTH + CHARACTERS_SUFFIX;
     public static final String DOCUMENT_REQUIRED_MESSAGE = "Document is required";
     public static final String DOCUMENT_SIZE_MESSAGE = "Document must not exceed " + DOCUMENT_MAX_LENGTH + CHARACTERS_SUFFIX;
+    public static final String DOCUMENT_IDENTIFIER_REQUIRED_MESSAGE = "Document identifier is required";
     public static final String DOCUMENT_TYPE_REQUIRED_MESSAGE = "Document type is required";
     public static final String DOCUMENT_TYPE_SIZE_MESSAGE = "Document type must not exceed " + DOCUMENT_TYPE_MAX_LENGTH + CHARACTERS_SUFFIX;
 }
