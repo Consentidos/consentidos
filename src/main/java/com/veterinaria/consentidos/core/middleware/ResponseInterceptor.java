@@ -44,13 +44,13 @@ public class ResponseInterceptor implements ResponseBodyAdvice<Object> {
         }
         
         // Create standardized success response
-        return createSuccessResponse(body, request);
+        return createSuccessResponse(body);
     }
     
     /**
      * Creates a standardized success response
      */
-    private Object createSuccessResponse(Object data, ServerHttpRequest request) {
+    private Object createSuccessResponse(Object data) {
         return data;
     }
     
