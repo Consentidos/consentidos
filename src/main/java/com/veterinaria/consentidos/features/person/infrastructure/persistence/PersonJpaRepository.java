@@ -17,10 +17,10 @@ public interface PersonJpaRepository extends JpaRepository<Person, Long> {
     /**
      * Finds a person by their document number.
      *
-     * @param document the person's document number
+     * @param documentNumber the person's document number
      * @return an Optional containing the person if found, empty otherwise
      */
-    Optional<Person> findByDocument(String document);
+    Optional<Person> findByIdentification_DocumentNumber(String documentNumber);
 
     /**
      * Finds persons by their city (case-insensitive).
@@ -36,13 +36,13 @@ public interface PersonJpaRepository extends JpaRepository<Person, Long> {
      * @param documentType the document type to search for
      * @return a list of persons with the specified document type
      */
-    List<Person> findByDocumentTypeIgnoreCase(String documentType);
+    List<Person> findByIdentification_DocumentIdentifier_DocumentTypeIgnoreCase(String documentType);
 
     /**
      * Checks if a person exists with the given document number.
      *
-     * @param document the document number to check
+     * @param documentNumber the document number to check
      * @return true if a person exists with this document, false otherwise
      */
-    boolean existsByDocument(String document);
+    boolean existsByIdentification_DocumentNumber(String documentNumber);
 }

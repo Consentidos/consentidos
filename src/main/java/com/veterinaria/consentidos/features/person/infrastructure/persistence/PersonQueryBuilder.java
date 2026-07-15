@@ -28,13 +28,14 @@ public class PersonQueryBuilder {
             predicates.add(cb.like(cb.lower(root.get("lastName")),
                     "%" + criteria.getLastName().toLowerCase() + "%"));
         }
-        if (criteria.getDocument() != null && !criteria.getDocument().isBlank()) {
-            predicates.add(cb.like(root.get("document"),
-                    "%" + criteria.getDocument() + "%"));
+        if (criteria.getDocumentNumber() != null && !criteria.getDocumentNumber().isBlank()) {
+            predicates.add(cb.like(root.get("identification").get("documentNumber"),
+                    "%" + criteria.getDocumentNumber() + "%"));
         }
-        if (criteria.getDocumentType() != null && !criteria.getDocumentType().isBlank()) {
-            predicates.add(cb.equal(cb.lower(root.get("documentType")),
-                    criteria.getDocumentType().toLowerCase()));
+        if (criteria.getDocumentIdentifierId() != null) {
+            predicates.add(cb.equal(
+                    root.get("identification").get("documentIdentifier").get("id"),
+                    criteria.getDocumentIdentifierId()));
         }
         if (criteria.getSex() != null && !criteria.getSex().isBlank()) {
             predicates.add(cb.equal(root.get("sex"), criteria.getSex()));
