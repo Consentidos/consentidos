@@ -7,7 +7,6 @@ import com.veterinaria.consentidos.features.person.domain.repository.PersonRepos
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.stream.Collectors;
 
 /**
  * Use case for dynamic person search using criteria.
@@ -28,7 +27,7 @@ public class SearchPersonUseCase {
         PagedResult<com.veterinaria.consentidos.features.person.domain.entity.Person> result =
                 personRepository.search(criteria);
         return PagedResult.of(
-                result.getContent().stream().map(PersonDto::fromEntity).collect(Collectors.toList()),
+                result.getContent().stream().map(PersonDto::fromEntity).toList(),
                 result.getPage(),
                 result.getSize(),
                 result.getTotalElements()

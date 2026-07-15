@@ -3,11 +3,13 @@ package com.veterinaria.consentidos.features.person.application.usecase;
 import com.veterinaria.consentidos.features.person.application.dto.PersonDto;
 import com.veterinaria.consentidos.features.person.application.command.UpdatePersonCommand;
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
+import com.veterinaria.consentidos.features.person.domain.exception.PersonAlreadyExistsException;
+import com.veterinaria.consentidos.features.person.domain.exception.PersonNotFoundException;
 import com.veterinaria.consentidos.features.person.domain.repository.PersonRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.Optional;
+import java.util.Objects;
 
 /**
  * Use case for updating an existing person.
@@ -33,33 +35,24 @@ public class UpdatePersonUseCase {
      */
     @Transactional
     public PersonDto execute(UpdatePersonCommand command) {
-        // Find the existing person
-        Optional<Person> existingPersonOpt = personRepository.findById(command.getId());
-        if (existingPersonOpt.isEmpty()) {
-            throw new IllegalArgumentException("Person with ID " + command.getId() + " not found");
+        Person existingPerson = personRepository.findById(command.getId())
+                .orElseThrow(() -> new PersonNotFoundException(command.getId()));
+
+        String currentDocument = existingPerson.getDocument();
+        String newDocument = command.getDocument();
+
+        boolean isDocumentChanged = !Objects.equals(currentDocument, newDocument);
+        if (isDocumentChanged && personRepository.existsByDocument(newDocument)) {
+            throw new PersonAlreadyExistsException(newDocument);
         }
 
-        Person existingPerson = existingPersonOpt.get();
-
-        // Check if document is being changed and if new document already exists
-        if (!existingPerson.getDocument().equals(command.getDocument())) {
-            if (personRepository.existsByDocument(command.getDocument())) {
-                throw new IllegalArgumentException("A person with document " + command.getDocument() + " already exists");
-            }
-        }
-
-        // Update the person data
         existingPerson.setSex(command.getSex());
         existingPerson.setFirstName(command.getFirstName());
         existingPerson.setLastName(command.getLastName());
         existingPerson.setCity(command.getCity());
-        existingPerson.setDocument(command.getDocument());
+        existingPerson.setDocument(newDocument);
         existingPerson.setDocumentType(command.getDocumentType());
 
-        // Save the updated person
-        Person updatedPerson = personRepository.save(existingPerson);
-
-        // Convert to DTO and return
-        return PersonDto.fromEntity(updatedPerson);
+        return PersonDto.fromEntity(personRepository.save(existingPerson));
     }
 }
