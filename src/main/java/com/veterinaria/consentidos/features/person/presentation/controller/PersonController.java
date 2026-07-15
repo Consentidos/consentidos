@@ -24,11 +24,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
-import java.util.Map;
 
 /**
  * REST controller for Person management.
- * This controller provides HTTP endpoints for CRUD operations on Person entities.
+ * Exceptions bubble up to the global ErrorHandler; no try/catch needed here.
  */
 @RestController
 @RequestMapping("/api/persons")
@@ -54,134 +53,44 @@ public class PersonController {
         this.searchPersonUseCase = searchPersonUseCase;
     }
 
-    /**
-     * Creates a new person.
-     *
-     * @param command the person creation data
-     * @return ResponseEntity with the created person or error message
-     */
     @PostMapping
-    public ResponseEntity<?> createPerson(@Valid @RequestBody CreatePersonCommand command) {
-        PersonDto createdPerson = createPersonUseCase.execute(command);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdPerson);
+    public ResponseEntity<PersonDto> createPerson(@Valid @RequestBody CreatePersonCommand command) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(createPersonUseCase.execute(command));
     }
 
-    /**
-     * Retrieves a person by ID.
-     *
-     * @param id the person's ID
-     * @return ResponseEntity with the person data or not found status
-     */
     @GetMapping("/{id}")
-    public ResponseEntity<?> getPersonById(@PathVariable Long id) {
-        PersonDto person = getPersonUseCase.getById(id);
-        if (person != null) {
-            return ResponseEntity.ok(person);
-        }
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<PersonDto> getPersonById(@PathVariable Long id) {
+        return ResponseEntity.ok(getPersonUseCase.getById(id));
     }
 
-    /**
-     * Retrieves a person by document number.
-     *
-     * @param document the person's document number
-     * @return ResponseEntity with the person data or not found status
-     */
-    @GetMapping("/document/{document}")
-    public ResponseEntity<?> getPersonByDocument(@PathVariable String document) {
-        PersonDto person = getPersonUseCase.getByDocument(document);
-        if (person != null) {
-            return ResponseEntity.ok(person);
-        }
-        return ResponseEntity.notFound().build();
-    }
-
-    /**
-     * Retrieves all persons or filters by city or document type.
-     *
-     * @param city optional city filter
-     * @param documentType optional document type filter
-     * @return ResponseEntity with list of persons
-     */
     @GetMapping
-    public ResponseEntity<?> getAllPersons(
+    public ResponseEntity<List<PersonDto>> getAllPersons(
             @RequestParam(required = false) String city,
             @RequestParam(required = false) String documentType) {
-        List<PersonDto> persons;
-        if (city != null && !city.trim().isEmpty()) {
-            persons = getPersonUseCase.getByCity(city);
-        } else if (documentType != null && !documentType.trim().isEmpty()) {
-            persons = getPersonUseCase.getByDocumentType(documentType);
-        } else {
-            persons = getPersonUseCase.getAll();
+        if (city != null && !city.isBlank()) {
+            return ResponseEntity.ok(getPersonUseCase.getByCity(city));
         }
-        return ResponseEntity.ok(persons);
+        if (documentType != null && !documentType.isBlank()) {
+            return ResponseEntity.ok(getPersonUseCase.getByDocumentType(documentType));
+        }
+        return ResponseEntity.ok(getPersonUseCase.getAll());
     }
 
-    /**
-     * Updates an existing person.
-     *
-     * @param id the person's ID
-     * @param command the person update data
-     * @return ResponseEntity with the updated person or error message
-     */
     @PutMapping("/{id}")
-    public ResponseEntity<?> updatePerson(@PathVariable Long id, @Valid @RequestBody UpdatePersonCommand command) {
+    public ResponseEntity<PersonDto> updatePerson(
+            @PathVariable Long id, @Valid @RequestBody UpdatePersonCommand command) {
         command.setId(id);
-        PersonDto updatedPerson = updatePersonUseCase.execute(command);
-        return ResponseEntity.ok(updatedPerson);
+        return ResponseEntity.ok(updatePersonUseCase.execute(command));
     }
 
-    /**
-     * Searches persons using dynamic criteria with AND composition.
-     * All fields are optional; only provided fields are applied as filters.
-     * Text fields use case-insensitive LIKE matching; date fields define a range.
-     *
-     * @param criteria the search criteria
-     * @return ResponseEntity with the list of matching persons
-     */
     @PostMapping("/search")
-    public ResponseEntity<?> searchPersons(@RequestBody PersonSearchCriteria criteria) {
-        PagedResult<PersonDto> result = searchPersonUseCase.execute(criteria);
-        return ResponseEntity.ok(result);
+    public ResponseEntity<PagedResult<PersonDto>> searchPersons(@RequestBody PersonSearchCriteria criteria) {
+        return ResponseEntity.ok(searchPersonUseCase.execute(criteria));
     }
 
-    /**
-     * Deletes a person by ID.
-     *
-     * @param id the person's ID
-     * @return ResponseEntity with success or error status
-     */
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deletePerson(@PathVariable Long id) {
-        try {
-            deletePersonUseCase.execute(id);
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    /**
-     * Checks if a person exists by document number.
-     *
-     * @param document the document number to check
-     * @return ResponseEntity with existence status
-     */
-    @GetMapping("/exists/{document}")
-    public ResponseEntity<?> checkPersonExists(@PathVariable String document) {
-        boolean exists = getPersonUseCase.existsByDocument(document);
-        return ResponseEntity.ok().body(Map.of("exists", exists));
-    }
-
-    /**
-     * Gets the total count of persons in the system.
-     *
-     * @return ResponseEntity with the total count
-     */
-    @GetMapping("/count")
-    public ResponseEntity<?> getTotalPersonCount() {
-        long count = getPersonUseCase.getTotalCount();
-        return ResponseEntity.ok().body(Map.of("count", count));
+    public ResponseEntity<Void> deletePerson(@PathVariable Long id) {
+        deletePersonUseCase.execute(id);
+        return ResponseEntity.noContent().build();
     }
 }
