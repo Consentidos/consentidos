@@ -1,11 +1,10 @@
 package com.veterinaria.consentidos.features.person.infrastructure.persistence;
 
 import com.veterinaria.consentidos.core.PagedResult;
-import com.veterinaria.consentidos.features.documentIdentifier.domain.entity.DocumentIdentifier;
-import com.veterinaria.consentidos.features.documentIdentifier.infrastructure.persistence.DocumentIdentifierJpaRepository;
-import com.veterinaria.consentidos.features.documentIdentifier.infrastructure.persistence.DocumentIdentifierRepositoryImpl;
+import com.veterinaria.consentidos.features.documenttype.domain.entity.DocumentType;
 import com.veterinaria.consentidos.features.person.domain.criteria.PersonSearchCriteria;
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
+import com.veterinaria.consentidos.features.person.domain.entity.PersonDocument;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DataJpaTest
-@Import({PersonRepositoryImpl.class, PersonQueryBuilder.class, DocumentIdentifierRepositoryImpl.class})
+@Import({PersonRepositoryImpl.class, PersonQueryBuilder.class})
 @DisplayName("PersonRepositoryImpl Search Integration Tests")
 class PersonRepositoryImplSearchTest {
 
@@ -38,19 +37,26 @@ class PersonRepositoryImplSearchTest {
     private static final String CITY_BOGOTA = "Bogota";
     private static final String LAST_PEREZ = "Perez";
 
-    private DocumentIdentifier diCC;
+    private DocumentType dtCC;
+
+    private Person persistPerson(String sex, LocalDateTime birthDate, String firstName,
+            String lastName, String docNumber, DocumentType docType, String city) {
+        Person person = new Person();
+        person.setSex(sex); person.setBirthDate(birthDate);
+        person.setFirstName(firstName); person.setLastName(lastName); person.setCity(city);
+        PersonDocument doc = new PersonDocument(person, docNumber, docType);
+        person.addDocument(doc);
+        return testEntityManager.persistAndFlush(person);
+    }
 
     @BeforeEach
     void setUp() {
-        diCC = testEntityManager.persistAndFlush(new DocumentIdentifier("CC", "Colombia"));
-        DocumentIdentifier diTI = testEntityManager.persistAndFlush(new DocumentIdentifier("TI", "Colombia"));
+        dtCC = testEntityManager.persistAndFlush(new DocumentType("CC", "Colombia"));
+        DocumentType dtTI = testEntityManager.persistAndFlush(new DocumentType("TI", "Colombia"));
 
-        testEntityManager.persistAndFlush(
-                new Person("M", DATE_1990, "Juan", LAST_PEREZ, "12345678", diCC, CITY_MEDELLIN));
-        testEntityManager.persistAndFlush(
-                new Person("F", DATE_1985, "Maria", "Gonzalez", "87654321", diTI, CITY_BOGOTA));
-        testEntityManager.persistAndFlush(
-                new Person("M", DATE_1995, "Carlos", LAST_PEREZ, "11223344", diCC, CITY_MEDELLIN));
+        persistPerson("M", DATE_1990, "Juan", LAST_PEREZ, "12345678", dtCC, CITY_MEDELLIN);
+        persistPerson("F", DATE_1985, "Maria", "Gonzalez", "87654321", dtTI, CITY_BOGOTA);
+        persistPerson("M", DATE_1995, "Carlos", LAST_PEREZ, "11223344", dtCC, CITY_MEDELLIN);
     }
 
     @Test
@@ -115,9 +121,9 @@ class PersonRepositoryImplSearchTest {
     }
 
     @Test
-    @DisplayName("Should filter by documentIdentifierId using exact match")
+    @DisplayName("Should filter by documentTypeId using exact match")
     void testSearchWithDocumentTypeShouldFilterResults() {
-        PersonSearchCriteria criteria = PersonSearchCriteria.builder().documentIdentifierId(diCC.getId()).build();
+        PersonSearchCriteria criteria = PersonSearchCriteria.builder().documentTypeId(dtCC.getId()).build();
 
         PagedResult<Person> result = personRepository.search(criteria);
 
@@ -223,7 +229,7 @@ class PersonRepositoryImplSearchTest {
                 .firstName("Juan")
                 .lastName(LAST_PEREZ)
                 .documentNumber("12345678")
-                .documentIdentifierId(diCC.getId())
+                .documentTypeId(dtCC.getId())
                 .sex("M")
                 .city(CITY_MEDELLIN)
                 .birthDateFrom(LocalDateTime.of(1989, Month.JANUARY, 1, 0, 0))

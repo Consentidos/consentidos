@@ -1,8 +1,9 @@
 package com.veterinaria.consentidos.features.person.application.usecase;
 
-import com.veterinaria.consentidos.features.documentIdentifier.domain.entity.DocumentIdentifier;
+import com.veterinaria.consentidos.features.documenttype.domain.entity.DocumentType;
 import com.veterinaria.consentidos.features.person.application.dto.PersonDto;
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
+import com.veterinaria.consentidos.features.person.domain.entity.PersonDocument;
 import com.veterinaria.consentidos.features.person.domain.exception.PersonNotFoundException;
 import com.veterinaria.consentidos.features.person.domain.repository.PersonRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,16 +42,22 @@ class GetPersonUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        DocumentIdentifier di1 = new DocumentIdentifier("CC", "Colombia");
-        di1.setId(1L);
-        DocumentIdentifier di2 = new DocumentIdentifier("TI", "Colombia");
-        di2.setId(2L);
+        DocumentType dt1 = new DocumentType("CC", "Colombia");
+        dt1.setId(1L);
+        DocumentType dt2 = new DocumentType("TI", "Colombia");
+        dt2.setId(2L);
 
-        testPerson1 = new Person("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678", di1, "Medellin");
+        testPerson1 = new Person();
+        testPerson1.setSex("M"); testPerson1.setBirthDate(LocalDateTime.of(1990, 1, 15, 0, 0));
+        testPerson1.setFirstName("Juan"); testPerson1.setLastName("Perez"); testPerson1.setCity("Medellin");
         testPerson1.setId(1L);
+        testPerson1.addDocument(new PersonDocument(testPerson1, "12345678", dt1));
 
-        testPerson2 = new Person("F", LocalDateTime.of(1985, 6, 20, 0, 0), "Maria", "Gonzalez", "87654321", di2, "Bogota");
+        testPerson2 = new Person();
+        testPerson2.setSex("F"); testPerson2.setBirthDate(LocalDateTime.of(1985, 6, 20, 0, 0));
+        testPerson2.setFirstName("Maria"); testPerson2.setLastName("Gonzalez"); testPerson2.setCity("Bogota");
         testPerson2.setId(2L);
+        testPerson2.addDocument(new PersonDocument(testPerson2, "87654321", dt2));
     }
 
     @Test
@@ -164,7 +171,7 @@ class GetPersonUseCaseTest {
         // Then
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals("CC", result.get(0).getDocumentIdentifier().getDocumentType());
+        assertEquals("CC", result.get(0).getDocumentType().getCode());
         
         verify(personRepository).findByDocumentType("CC");
     }

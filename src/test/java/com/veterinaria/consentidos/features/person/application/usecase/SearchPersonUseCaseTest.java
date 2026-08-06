@@ -3,8 +3,9 @@ package com.veterinaria.consentidos.features.person.application.usecase;
 import com.veterinaria.consentidos.core.PagedResult;
 import com.veterinaria.consentidos.features.person.application.dto.PersonDto;
 import com.veterinaria.consentidos.features.person.domain.criteria.PersonSearchCriteria;
+import com.veterinaria.consentidos.features.documenttype.domain.entity.DocumentType;
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
-import com.veterinaria.consentidos.features.documentIdentifier.domain.entity.DocumentIdentifier;
+import com.veterinaria.consentidos.features.person.domain.entity.PersonDocument;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,9 +38,11 @@ class SearchPersonUseCaseTest {
     @DisplayName("Should return mapped paged result when persons are found")
     void testExecute_WithResults_ShouldReturnMappedPagedResult() {
         // Given
-        Person person = new Person("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678",
-                new DocumentIdentifier("CC", "Colombia"), "Medellin");
+        Person person = new Person();
+        person.setSex("M"); person.setBirthDate(LocalDateTime.of(1990, 1, 15, 0, 0));
+        person.setFirstName("Juan"); person.setLastName("Perez"); person.setCity("Medellin");
         person.setId(1L);
+        person.addDocument(new PersonDocument(person, "12345678", new DocumentType("CC", "Colombia")));
         PersonSearchCriteria criteria = PersonSearchCriteria.builder().city("Medellin").build();
         PagedResult<Person> repoResult = PagedResult.of(Arrays.asList(person), 0, 20, 1L);
         when(personRepository.search(criteria)).thenReturn(repoResult);

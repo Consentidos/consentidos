@@ -1,6 +1,8 @@
 package com.veterinaria.consentidos.features.person.application.usecase;
 
+import com.veterinaria.consentidos.features.documenttype.domain.entity.DocumentType;
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
+import com.veterinaria.consentidos.features.person.domain.entity.PersonDocument;
 import com.veterinaria.consentidos.features.person.domain.exception.PersonNotFoundException;
 import com.veterinaria.consentidos.features.person.domain.repository.PersonRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,9 +38,12 @@ class DeletePersonUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        existingPerson = new Person("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678",
-                new com.veterinaria.consentidos.features.documentIdentifier.domain.entity.DocumentIdentifier("CC", "Colombia"), "Medellin");
+        existingPerson = new Person();
+        existingPerson.setSex("M"); existingPerson.setBirthDate(LocalDateTime.of(1990, 1, 15, 0, 0));
+        existingPerson.setFirstName("Juan"); existingPerson.setLastName("Perez"); existingPerson.setCity("Medellin");
         existingPerson.setId(1L);
+        existingPerson.addDocument(new PersonDocument(existingPerson, "12345678",
+                new DocumentType("CC", "Colombia")));
     }
 
     @Test

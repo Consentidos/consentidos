@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.veterinaria.consentidos.core.PagedResult;
 import com.veterinaria.consentidos.features.person.application.command.CreatePersonCommand;
-import com.veterinaria.consentidos.features.documentIdentifier.application.dto.DocumentIdentifierDto;
+import com.veterinaria.consentidos.features.documenttype.application.dto.DocumentTypeDto;
 import com.veterinaria.consentidos.features.person.application.dto.PersonDto;
 import com.veterinaria.consentidos.features.person.application.command.UpdatePersonCommand;
 import com.veterinaria.consentidos.features.person.application.usecase.CreatePersonUseCase;
@@ -31,7 +31,6 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.hamcrest.Matchers.hasSize;
@@ -79,7 +78,7 @@ class PersonControllerTest {
         objectMapper.registerModule(new JavaTimeModule());
         
         testPersonDto = new PersonDto(1L, "M", DATE_BIRTH, "Juan", LAST_PEREZ, DOC_NUMBER,
-                new DocumentIdentifierDto(1L, "CC", COUNTRY_COLOMBIA), CITY_MEDELLIN);
+                new DocumentTypeDto(1L, "CC", COUNTRY_COLOMBIA), CITY_MEDELLIN);
     }
 
     @Test
@@ -154,7 +153,7 @@ class PersonControllerTest {
     void testGetAllPersons_NoFilters_ShouldReturnAllPersons() throws Exception {
         // Given
         PersonDto person2 = new PersonDto(2L, "F", LocalDateTime.of(1985, Month.JUNE, 20, 0, 0), "Maria", "Gonzalez", "87654321",
-                new DocumentIdentifierDto(2L, "TI", COUNTRY_COLOMBIA), "Bogota");
+                new DocumentTypeDto(2L, "TI", COUNTRY_COLOMBIA), "Bogota");
         List<PersonDto> persons = Arrays.asList(testPersonDto, person2);
         when(getPersonUseCase.getAll()).thenReturn(persons);
 
@@ -199,7 +198,7 @@ class PersonControllerTest {
         mockMvc.perform(get("/api/persons").param("documentType", "CC"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].documentIdentifier.documentType", is("CC")));
+                .andExpect(jsonPath("$[0].documentType.code", is("CC")));
 
         verify(getPersonUseCase).getByDocumentType("CC");
         verify(getPersonUseCase, never()).getAll();
@@ -212,7 +211,7 @@ class PersonControllerTest {
         // Given
         UpdatePersonCommand command = new UpdatePersonCommand(1L, "F", "Juana", "Martinez", "Bogota", "87654321", 2L);
         PersonDto updatedPersonDto = new PersonDto(1L, "F", DATE_BIRTH, "Juana", "Martinez", "87654321",
-                new DocumentIdentifierDto(2L, "TI", COUNTRY_COLOMBIA), "Bogota");
+                new DocumentTypeDto(2L, "TI", COUNTRY_COLOMBIA), "Bogota");
         when(updatePersonUseCase.execute(any(UpdatePersonCommand.class))).thenReturn(updatedPersonDto);
 
         // When & Then

@@ -1,10 +1,11 @@
 package com.veterinaria.consentidos.features.person.application.usecase;
 
-import com.veterinaria.consentidos.features.documentIdentifier.domain.entity.DocumentIdentifier;
-import com.veterinaria.consentidos.features.documentIdentifier.domain.repository.DocumentIdentifierRepository;
+import com.veterinaria.consentidos.features.documenttype.domain.entity.DocumentType;
+import com.veterinaria.consentidos.features.documenttype.domain.repository.DocumentTypeRepository;
 import com.veterinaria.consentidos.features.person.application.command.CreatePersonCommand;
 import com.veterinaria.consentidos.features.person.application.dto.PersonDto;
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
+import com.veterinaria.consentidos.features.person.domain.entity.PersonDocument;
 import com.veterinaria.consentidos.features.person.domain.exception.PersonAlreadyExistsException;
 import com.veterinaria.consentidos.features.person.domain.repository.PersonRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,19 +31,19 @@ class CreatePersonUseCaseTest {
     private PersonRepository personRepository;
 
     @Mock
-    private DocumentIdentifierRepository documentIdentifierRepository;
+    private DocumentTypeRepository documentTypeRepository;
 
     @InjectMocks
     private CreatePersonUseCase createPersonUseCase;
 
-    private DocumentIdentifier documentIdentifier;
+    private DocumentType documentType;
     private CreatePersonCommand validCommand;
     private Person savedPerson;
 
     @BeforeEach
     void setUp() {
-        documentIdentifier = new DocumentIdentifier("CC", "Colombia");
-        documentIdentifier.setId(1L);
+        documentType = new DocumentType("CC", "Colombia");
+        documentType.setId(1L);
 
         validCommand = new CreatePersonCommand(
             "M",
@@ -54,8 +55,15 @@ class CreatePersonUseCaseTest {
             1L
         );
 
-        savedPerson = new Person("M", LocalDateTime.of(1990, 1, 15, 0, 0), "Juan", "Perez", "12345678", documentIdentifier, "Medellin");
+        savedPerson = new Person();
+        savedPerson.setSex("M");
+        savedPerson.setBirthDate(LocalDateTime.of(1990, 1, 15, 0, 0));
+        savedPerson.setFirstName("Juan");
+        savedPerson.setLastName("Perez");
+        savedPerson.setCity("Medellin");
         savedPerson.setId(1L);
+        PersonDocument doc = new PersonDocument(savedPerson, "12345678", documentType);
+        savedPerson.addDocument(doc);
     }
 
     @Test
@@ -63,7 +71,7 @@ class CreatePersonUseCaseTest {
     void testExecute_ValidCommand_ShouldCreatePerson() {
         // Given
         when(personRepository.existsByDocument("12345678")).thenReturn(false);
-        when(documentIdentifierRepository.findById(1L)).thenReturn(Optional.of(documentIdentifier));
+        when(documentTypeRepository.findById(1L)).thenReturn(Optional.of(documentType));
         when(personRepository.save(any(Person.class))).thenReturn(savedPerson);
 
         // When
@@ -77,12 +85,12 @@ class CreatePersonUseCaseTest {
         assertEquals("Perez", result.getLastName());
         assertEquals("Medellin", result.getCity());
         assertEquals("12345678", result.getDocumentNumber());
-        assertNotNull(result.getDocumentIdentifier());
-        assertEquals("CC", result.getDocumentIdentifier().getDocumentType());
+        assertNotNull(result.getDocumentType());
+        assertEquals("CC", result.getDocumentType().getCode());
         assertEquals(LocalDateTime.of(1990, 1, 15, 0, 0), result.getBirthDate());
 
         verify(personRepository).existsByDocument("12345678");
-        verify(documentIdentifierRepository).findById(1L);
+        verify(documentTypeRepository).findById(1L);
         verify(personRepository).save(any(Person.class));
     }
 
@@ -108,7 +116,7 @@ class CreatePersonUseCaseTest {
     void testExecute_ShouldCallRepositoryWithCorrectParameters() {
         // Given
         when(personRepository.existsByDocument("12345678")).thenReturn(false);
-        when(documentIdentifierRepository.findById(1L)).thenReturn(Optional.of(documentIdentifier));
+        when(documentTypeRepository.findById(1L)).thenReturn(Optional.of(documentType));
         when(personRepository.save(any(Person.class))).thenReturn(savedPerson);
 
         // When
@@ -120,9 +128,10 @@ class CreatePersonUseCaseTest {
             person.getFirstName().equals("Juan") &&
             person.getLastName().equals("Perez") &&
             person.getCity().equals("Medellin") &&
-            person.getDocumentNumber().equals("12345678") &&
-            person.getDocumentType().equals("CC") &&
-            person.getBirthDate().equals(LocalDateTime.of(1990, 1, 15, 0, 0))
+            person.getBirthDate().equals(LocalDateTime.of(1990, 1, 15, 0, 0)) &&
+            person.getDocuments().stream().anyMatch(d ->
+                "12345678".equals(d.getDocumentNumber()) &&
+                d.getDocumentType() != null && "CC".equals(d.getDocumentType().getCode()))
         ));
     }
 
