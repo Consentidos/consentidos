@@ -1,4 +1,4 @@
-package com.veterinaria.consentidos.features.documentIdentifier.domain.entity;
+package com.veterinaria.consentidos.features.documentidentifier.domain.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

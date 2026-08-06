@@ -1,7 +1,7 @@
-package com.veterinaria.consentidos.features.documentIdentifier.infrastructure.persistence;
+package com.veterinaria.consentidos.features.documentidentifier.infrastructure.persistence;
 
-import com.veterinaria.consentidos.features.documentIdentifier.domain.entity.DocumentIdentifier;
-import com.veterinaria.consentidos.features.documentIdentifier.domain.repository.DocumentIdentifierRepository;
+import com.veterinaria.consentidos.features.documentidentifier.domain.entity.DocumentIdentifier;
+import com.veterinaria.consentidos.features.documentidentifier.domain.repository.DocumentIdentifierRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

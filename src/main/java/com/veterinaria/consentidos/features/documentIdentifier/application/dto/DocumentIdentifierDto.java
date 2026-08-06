@@ -1,6 +1,6 @@
-package com.veterinaria.consentidos.features.documentIdentifier.application.dto;
+package com.veterinaria.consentidos.features.documentidentifier.application.dto;
 
-import com.veterinaria.consentidos.features.documentIdentifier.domain.entity.DocumentIdentifier;
+import com.veterinaria.consentidos.features.documentidentifier.domain.entity.DocumentIdentifier;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

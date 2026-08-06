@@ -1,6 +1,6 @@
-package com.veterinaria.consentidos.features.documentIdentifier.domain.repository;
+package com.veterinaria.consentidos.features.documentidentifier.domain.repository;
 
-import com.veterinaria.consentidos.features.documentIdentifier.domain.entity.DocumentIdentifier;
+import com.veterinaria.consentidos.features.documentidentifier.domain.entity.DocumentIdentifier;
 
 import java.util.List;
 import java.util.Optional;

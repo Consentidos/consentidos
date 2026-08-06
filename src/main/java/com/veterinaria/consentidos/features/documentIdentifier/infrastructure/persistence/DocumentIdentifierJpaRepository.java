@@ -1,6 +1,6 @@
-package com.veterinaria.consentidos.features.documentIdentifier.infrastructure.persistence;
+package com.veterinaria.consentidos.features.documentidentifier.infrastructure.persistence;
 
-import com.veterinaria.consentidos.features.documentIdentifier.domain.entity.DocumentIdentifier;
+import com.veterinaria.consentidos.features.documentidentifier.domain.entity.DocumentIdentifier;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
