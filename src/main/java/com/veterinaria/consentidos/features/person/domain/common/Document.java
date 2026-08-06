@@ -1,6 +1,6 @@
 package com.veterinaria.consentidos.features.person.domain.common;
 
-import com.veterinaria.consentidos.features.documentIdentifier.domain.entity.DocumentIdentifier;
+import com.veterinaria.consentidos.features.documentidentifier.domain.entity.DocumentIdentifier;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.FetchType;

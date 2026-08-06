@@ -1,28 +1,30 @@
 package com.veterinaria.consentidos.features.person.domain.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
-import com.veterinaria.consentidos.features.documentIdentifier.domain.entity.DocumentIdentifier;
-import com.veterinaria.consentidos.features.person.domain.common.Document;
+import com.veterinaria.consentidos.features.documenttype.domain.entity.DocumentType;
 import static com.veterinaria.consentidos.features.person.domain.common.PersonValidationConstants.*;
 
 /**
  * Person entity representing a person in the veterinary system.
- * This entity stores basic personal information including identification details.
+ * Document history is managed via PersonDocument (one active at a time).
  */
 @Entity
 @Table(name = "persons")
@@ -52,62 +54,58 @@ public class Person {
     @Size(max = LAST_NAME_MAX_LENGTH, message = LAST_NAME_SIZE_MESSAGE)
     private String lastName;
 
-    @Valid
-    @Embedded
-    private Document identification;
-
     @Column(name = "ciudad", nullable = false, length = CITY_MAX_LENGTH)
     @NotBlank(message = CITY_REQUIRED_MESSAGE)
     @Size(max = CITY_MAX_LENGTH, message = CITY_SIZE_MESSAGE)
     private String city;
 
-    // Default constructor for JPA
+    @OneToMany(mappedBy = "person", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<PersonDocument> documents = new ArrayList<>();
+
     public Person() {
     }
 
-    // Constructor for creating new persons
-    public Person(String sex, LocalDateTime birthDate, String firstName, String lastName, String documentNumber, DocumentIdentifier documentIdentifier, String city) {
-        this.sex = sex;
-        this.birthDate = birthDate;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.identification = new Document(documentNumber, documentIdentifier);
-        this.city = city;
+    // Returns the currently active document, or null if none exists
+    public PersonDocument getActiveDocument() {
+        if (documents == null) return null;
+        return documents.stream().filter(PersonDocument::isActive).findFirst().orElse(null);
     }
 
-    // Convenience accessors — delegate to the Document value object
+    // Convenience accessor delegating to the active document
     public String getDocumentNumber() {
-        return identification != null ? identification.getDocumentNumber() : null;
+        PersonDocument active = getActiveDocument();
+        return active != null ? active.getDocumentNumber() : null;
     }
 
-    public void setDocumentNumber(String documentNumber) {
-        if (this.identification == null) this.identification = new Document();
-        this.identification.setDocumentNumber(documentNumber);
+    // Returns the DocumentType entity of the active document
+    public DocumentType getDocumentType() {
+        PersonDocument active = getActiveDocument();
+        return active != null ? active.getDocumentType() : null;
     }
 
-    public DocumentIdentifier getDocumentIdentifier() {
-        return identification != null ? identification.getDocumentIdentifier() : null;
-    }
-
-    public void setDocumentIdentifier(DocumentIdentifier documentIdentifier) {
-        if (this.identification == null) this.identification = new Document();
-        this.identification.setDocumentIdentifier(documentIdentifier);
-    }
-
-    public String getDocumentType() {
-        return identification != null && identification.getDocumentIdentifier() != null
-                ? identification.getDocumentIdentifier().getDocumentType() : null;
+    // Adds a new document and links it back to this person
+    public void addDocument(PersonDocument document) {
+        document.setPerson(this);
+        documents.add(document);
     }
 
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if (!(obj instanceof Person person)) return false;
-        return Objects.equals(identification, person.identification);
+        if (!(obj instanceof Person other)) return false;
+        // Saved entities: compare by id
+        if (id != null) return Objects.equals(id, other.id);
+        // Unsaved entities: compare by active document number
+        String myDoc = getDocumentNumber();
+        String otherDoc = other.getDocumentNumber();
+        if (myDoc == null) return false;
+        return myDoc.equals(otherDoc);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(identification);
+        if (id != null) return Objects.hash(id);
+        String doc = getDocumentNumber();
+        return doc != null ? doc.hashCode() : 0;
     }
 }

@@ -39,20 +39,20 @@ public abstract class BasePersonData {
     @Size(max = DOCUMENT_MAX_LENGTH, message = DOCUMENT_SIZE_MESSAGE)
     protected String documentNumber;
 
-    @NotNull(message = DOCUMENT_IDENTIFIER_REQUIRED_MESSAGE)
-    protected Long documentIdentifierId;
+    @NotNull(message = DOCUMENT_TYPE_REQUIRED_MESSAGE)
+    protected Long documentTypeId;
 
     // Protected constructor for subclasses
     protected BasePersonData() {
     }
 
-    protected BasePersonData(String sex, String firstName, String lastName, String city, String documentNumber, Long documentIdentifierId) {
+    protected BasePersonData(String sex, String firstName, String lastName, String city, String documentNumber, Long documentTypeId) {
         this.sex = sex;
         this.firstName = firstName;
         this.lastName = lastName;
         this.city = city;
         this.documentNumber = documentNumber;
-        this.documentIdentifierId = documentIdentifierId;
+        this.documentTypeId = documentTypeId;
     }
 
     // Utility method available to all subclasses
