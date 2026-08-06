@@ -22,8 +22,8 @@ public class UpdatePersonCommand extends BasePersonData {
     }
 
     // Constructor with all fields
-    public UpdatePersonCommand(Long id, String sex, String firstName, String lastName, String city, String documentNumber, Long documentIdentifierId) {
-        super(sex, firstName, lastName, city, documentNumber, documentIdentifierId);
+    public UpdatePersonCommand(Long id, String sex, String firstName, String lastName, String city, String documentNumber, Long documentTypeId) {
+        super(sex, firstName, lastName, city, documentNumber, documentTypeId);
         this.id = id;
     }
 }

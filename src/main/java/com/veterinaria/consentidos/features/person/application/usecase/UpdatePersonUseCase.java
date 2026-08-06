@@ -1,10 +1,11 @@
 package com.veterinaria.consentidos.features.person.application.usecase;
 
-import com.veterinaria.consentidos.features.documentIdentifier.domain.entity.DocumentIdentifier;
-import com.veterinaria.consentidos.features.documentIdentifier.domain.repository.DocumentIdentifierRepository;
+import com.veterinaria.consentidos.features.documenttype.domain.entity.DocumentType;
+import com.veterinaria.consentidos.features.documenttype.domain.repository.DocumentTypeRepository;
 import com.veterinaria.consentidos.features.person.application.dto.PersonDto;
 import com.veterinaria.consentidos.features.person.application.command.UpdatePersonCommand;
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
+import com.veterinaria.consentidos.features.person.domain.entity.PersonDocument;
 import com.veterinaria.consentidos.features.person.domain.exception.PersonAlreadyExistsException;
 import com.veterinaria.consentidos.features.person.domain.exception.PersonNotFoundException;
 import com.veterinaria.consentidos.features.person.domain.repository.PersonRepository;
@@ -15,17 +16,19 @@ import java.util.Objects;
 
 /**
  * Use case for updating an existing person.
+ * When the document number or type changes, a new PersonDocument is inserted
+ * and the DB trigger automatically deactivates the previous one.
  */
 @Service
 public class UpdatePersonUseCase {
 
     private final PersonRepository personRepository;
-    private final DocumentIdentifierRepository documentIdentifierRepository;
+    private final DocumentTypeRepository documentTypeRepository;
 
     @Autowired
-    public UpdatePersonUseCase(PersonRepository personRepository, DocumentIdentifierRepository documentIdentifierRepository) {
+    public UpdatePersonUseCase(PersonRepository personRepository, DocumentTypeRepository documentTypeRepository) {
         this.personRepository = personRepository;
-        this.documentIdentifierRepository = documentIdentifierRepository;
+        this.documentTypeRepository = documentTypeRepository;
     }
 
     @Transactional
@@ -36,22 +39,30 @@ public class UpdatePersonUseCase {
         String currentDocumentNumber = existingPerson.getDocumentNumber();
         String newDocumentNumber = command.getDocumentNumber();
 
-        boolean isDocumentChanged = !Objects.equals(currentDocumentNumber, newDocumentNumber);
-        if (isDocumentChanged && personRepository.existsByDocument(newDocumentNumber)) {
+        boolean documentNumberChanged = !Objects.equals(currentDocumentNumber, newDocumentNumber);
+        if (documentNumberChanged && personRepository.existsByDocument(newDocumentNumber)) {
             throw new PersonAlreadyExistsException(newDocumentNumber);
         }
 
-        DocumentIdentifier documentIdentifier = documentIdentifierRepository
-                .findById(command.getDocumentIdentifierId())
+        DocumentType documentType = documentTypeRepository
+                .findById(command.getDocumentTypeId())
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "Document identifier not found: " + command.getDocumentIdentifierId()));
+                        "Document type not found: " + command.getDocumentTypeId()));
 
         existingPerson.setSex(command.getSex());
         existingPerson.setFirstName(command.getFirstName());
         existingPerson.setLastName(command.getLastName());
         existingPerson.setCity(command.getCity());
-        existingPerson.setDocumentNumber(newDocumentNumber);
-        existingPerson.setDocumentIdentifier(documentIdentifier);
+
+        Long currentDocumentTypeId = existingPerson.getDocumentType() != null
+                ? existingPerson.getDocumentType().getId() : null;
+        boolean documentChanged = documentNumberChanged
+                || !Objects.equals(currentDocumentTypeId, command.getDocumentTypeId());
+
+        if (documentChanged) {
+            PersonDocument newDoc = new PersonDocument(existingPerson, newDocumentNumber, documentType);
+            existingPerson.addDocument(newDoc);
+        }
 
         return PersonDto.fromEntity(personRepository.save(existingPerson));
     }

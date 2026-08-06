@@ -1,10 +1,11 @@
 package com.veterinaria.consentidos.features.person.application.usecase;
 
-import com.veterinaria.consentidos.features.documentIdentifier.domain.entity.DocumentIdentifier;
-import com.veterinaria.consentidos.features.documentIdentifier.domain.repository.DocumentIdentifierRepository;
+import com.veterinaria.consentidos.features.documenttype.domain.entity.DocumentType;
+import com.veterinaria.consentidos.features.documenttype.domain.repository.DocumentTypeRepository;
 import com.veterinaria.consentidos.features.person.application.command.CreatePersonCommand;
 import com.veterinaria.consentidos.features.person.application.dto.PersonDto;
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
+import com.veterinaria.consentidos.features.person.domain.entity.PersonDocument;
 import com.veterinaria.consentidos.features.person.domain.exception.PersonAlreadyExistsException;
 import com.veterinaria.consentidos.features.person.domain.repository.PersonRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,12 +19,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class CreatePersonUseCase {
 
     private final PersonRepository personRepository;
-    private final DocumentIdentifierRepository documentIdentifierRepository;
+    private final DocumentTypeRepository documentTypeRepository;
 
     @Autowired
-    public CreatePersonUseCase(PersonRepository personRepository, DocumentIdentifierRepository documentIdentifierRepository) {
+    public CreatePersonUseCase(PersonRepository personRepository, DocumentTypeRepository documentTypeRepository) {
         this.personRepository = personRepository;
-        this.documentIdentifierRepository = documentIdentifierRepository;
+        this.documentTypeRepository = documentTypeRepository;
     }
 
     @Transactional
@@ -32,20 +33,20 @@ public class CreatePersonUseCase {
             throw new PersonAlreadyExistsException(command.getDocumentNumber());
         }
 
-        DocumentIdentifier documentIdentifier = documentIdentifierRepository
-                .findById(command.getDocumentIdentifierId())
+        DocumentType documentType = documentTypeRepository
+                .findById(command.getDocumentTypeId())
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "Document identifier not found: " + command.getDocumentIdentifierId()));
+                        "Document type not found: " + command.getDocumentTypeId()));
 
-        Person person = new Person(
-                command.getSex(),
-                command.getBirthDate(),
-                command.getFirstName(),
-                command.getLastName(),
-                command.getDocumentNumber(),
-                documentIdentifier,
-                command.getCity()
-        );
+        Person person = new Person();
+        person.setSex(command.getSex());
+        person.setBirthDate(command.getBirthDate());
+        person.setFirstName(command.getFirstName());
+        person.setLastName(command.getLastName());
+        person.setCity(command.getCity());
+
+        PersonDocument document = new PersonDocument(person, command.getDocumentNumber(), documentType);
+        person.addDocument(document);
 
         return PersonDto.fromEntity(personRepository.save(person));
     }

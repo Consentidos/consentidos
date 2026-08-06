@@ -1,7 +1,8 @@
 package com.veterinaria.consentidos.features.person.application.dto;
 
-import com.veterinaria.consentidos.features.documentIdentifier.application.dto.DocumentIdentifierDto;
+import com.veterinaria.consentidos.features.documenttype.application.dto.DocumentTypeDto;
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
+import com.veterinaria.consentidos.features.person.domain.entity.PersonDocument;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -26,18 +27,19 @@ public class PersonDto {
     private String firstName;
     private String lastName;
     private String documentNumber;
-    private DocumentIdentifierDto documentIdentifier;
+    private DocumentTypeDto documentType;
     private String city;
 
     public static PersonDto fromEntity(Person person) {
+        PersonDocument activeDoc = person.getActiveDocument();
         return new PersonDto(
                 person.getId(),
                 person.getSex(),
                 person.getBirthDate(),
                 person.getFirstName(),
                 person.getLastName(),
-                person.getDocumentNumber(),
-                DocumentIdentifierDto.fromEntity(person.getDocumentIdentifier()),
+                activeDoc != null ? activeDoc.getDocumentNumber() : null,
+                activeDoc != null ? DocumentTypeDto.fromEntity(activeDoc.getDocumentType()) : null,
                 person.getCity()
         );
     }
