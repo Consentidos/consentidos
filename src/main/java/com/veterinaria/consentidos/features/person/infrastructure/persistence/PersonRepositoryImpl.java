@@ -47,7 +47,7 @@ public class PersonRepositoryImpl implements PersonRepository {
 
     @Override
     public Optional<Person> findByDocument(String documentNumber) {
-        return personJpaRepository.findByIdentification_DocumentNumber(documentNumber);
+        return personJpaRepository.findByDocuments_DocumentNumber(documentNumber);
     }
 
     @Override
@@ -62,12 +62,12 @@ public class PersonRepositoryImpl implements PersonRepository {
 
     @Override
     public List<Person> findByDocumentType(String documentType) {
-        return personJpaRepository.findByIdentification_DocumentIdentifier_DocumentTypeIgnoreCase(documentType);
+        return personJpaRepository.findByDocuments_DocumentType_CodeIgnoreCaseAndDocuments_IsActiveTrue(documentType);
     }
 
     @Override
     public boolean existsByDocument(String documentNumber) {
-        return personJpaRepository.existsByIdentification_DocumentNumber(documentNumber);
+        return personJpaRepository.existsByDocuments_DocumentNumber(documentNumber);
     }
 
     @Override

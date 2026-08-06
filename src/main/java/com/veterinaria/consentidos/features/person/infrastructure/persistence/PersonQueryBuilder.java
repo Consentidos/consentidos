@@ -2,7 +2,10 @@ package com.veterinaria.consentidos.features.person.infrastructure.persistence;
 
 import com.veterinaria.consentidos.features.person.domain.criteria.PersonSearchCriteria;
 import com.veterinaria.consentidos.features.person.domain.entity.Person;
+import com.veterinaria.consentidos.features.person.domain.entity.PersonDocument;
 import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import org.springframework.stereotype.Component;
@@ -12,7 +15,6 @@ import java.util.List;
 
 /**
  * Builds JPA Criteria predicates for dynamic Person queries.
- * Separates query construction from query execution in PersonRepositoryImpl.
  */
 @Component
 public class PersonQueryBuilder {
@@ -28,15 +30,24 @@ public class PersonQueryBuilder {
             predicates.add(cb.like(cb.lower(root.get("lastName")),
                     "%" + criteria.getLastName().toLowerCase() + "%"));
         }
+
+        // JOIN on documents only when document-related criteria are present
+        Join<Person, PersonDocument> docsJoin = null;
+
         if (criteria.getDocumentNumber() != null && !criteria.getDocumentNumber().isBlank()) {
-            predicates.add(cb.like(root.get("identification").get("documentNumber"),
+            docsJoin = root.join("documents", JoinType.INNER);
+            predicates.add(cb.isTrue(docsJoin.get("isActive")));
+            predicates.add(cb.like(docsJoin.get("documentNumber"),
                     "%" + criteria.getDocumentNumber() + "%"));
         }
-        if (criteria.getDocumentIdentifierId() != null) {
-            predicates.add(cb.equal(
-                    root.get("identification").get("documentIdentifier").get("id"),
-                    criteria.getDocumentIdentifierId()));
+        if (criteria.getDocumentTypeId() != null) {
+            if (docsJoin == null) {
+                docsJoin = root.join("documents", JoinType.INNER);
+                predicates.add(cb.isTrue(docsJoin.get("isActive")));
+            }
+            predicates.add(cb.equal(docsJoin.get("documentType").get("id"), criteria.getDocumentTypeId()));
         }
+
         if (criteria.getSex() != null && !criteria.getSex().isBlank()) {
             predicates.add(cb.equal(root.get("sex"), criteria.getSex()));
         }

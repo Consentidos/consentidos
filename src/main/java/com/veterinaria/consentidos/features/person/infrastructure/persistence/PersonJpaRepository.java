@@ -8,41 +8,27 @@ import java.util.Optional;
 
 /**
  * JPA repository interface for Person entity.
- * This interface extends JpaRepository to provide basic CRUD operations
- * and defines custom query methods for Person-specific operations.
  */
 @Repository
 public interface PersonJpaRepository extends JpaRepository<Person, Long> {
 
     /**
-     * Finds a person by their document number.
-     *
-     * @param documentNumber the person's document number
-     * @return an Optional containing the person if found, empty otherwise
+     * Finds a person by document number (any state — active or historical).
      */
-    Optional<Person> findByIdentification_DocumentNumber(String documentNumber);
+    Optional<Person> findByDocuments_DocumentNumber(String documentNumber);
 
     /**
-     * Finds persons by their city (case-insensitive).
-     *
-     * @param city the city to search for
-     * @return a list of persons living in the specified city
+     * Finds persons by city (case-insensitive).
      */
     List<Person> findByCityIgnoreCase(String city);
 
     /**
-     * Finds persons by their document type (case-insensitive).
-     *
-     * @param documentType the document type to search for
-     * @return a list of persons with the specified document type
+     * Finds persons by document type code (case-insensitive), active documents only.
      */
-    List<Person> findByIdentification_DocumentIdentifier_DocumentTypeIgnoreCase(String documentType);
+    List<Person> findByDocuments_DocumentType_CodeIgnoreCaseAndDocuments_IsActiveTrue(String code);
 
     /**
-     * Checks if a person exists with the given document number.
-     *
-     * @param documentNumber the document number to check
-     * @return true if a person exists with this document, false otherwise
+     * Checks if any person already holds the given document number.
      */
-    boolean existsByIdentification_DocumentNumber(String documentNumber);
+    boolean existsByDocuments_DocumentNumber(String documentNumber);
 }
