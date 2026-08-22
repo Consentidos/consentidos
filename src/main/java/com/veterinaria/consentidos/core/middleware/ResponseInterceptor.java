@@ -44,21 +44,14 @@ public class ResponseInterceptor implements ResponseBodyAdvice<Object> {
         }
         
         // Create standardized success response
-        return createSuccessResponse(body, request);
+        return createSuccessResponse(body);
     }
     
     /**
      * Creates a standardized success response
      */
-    private Map<String, Object> createSuccessResponse(Object data, ServerHttpRequest request) {
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", 200);
-        response.put("success", true);
-        response.put("message", "Request processed successfully");
-        response.put("data", data);
-        response.put("path", request.getURI().getPath());
-        response.put("timestamp", LocalDateTime.now());
-        return response;
+    private Object createSuccessResponse(Object data) {
+        return data;
     }
     
     /**
