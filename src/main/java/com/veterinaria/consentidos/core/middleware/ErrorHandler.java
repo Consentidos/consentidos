@@ -93,6 +93,23 @@ public class ErrorHandler {
 
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
+
+    /**
+     * Handles authentication and authorization related exceptions
+     */
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<Map<String, Object>> handleSecurityException(
+            SecurityException ex, WebRequest request) {
+
+        Map<String, Object> response = createErrorResponse(
+            HttpStatus.UNAUTHORIZED,
+            "Unauthorized",
+            ex.getMessage(),
+            request
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    }
     
     /**
      * Handles runtime exceptions
