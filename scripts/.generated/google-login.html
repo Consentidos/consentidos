@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consentidos - Google Login Test</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            line-height: 1.5;
+        }
+        code, pre, textarea {
+            font-family: Consolas, monospace;
+        }
+        textarea {
+            width: 100%;
+            min-height: 220px;
+            margin-top: 1rem;
+        }
+        .box {
+            background: #f7f7f7;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .muted {
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Prueba local Google Identity</h1>
+    <div class="box">
+        <p><strong>Client ID detectado:</strong> <code>764492983375-jql5ls5i2htbmmu6sfs9pqsrgaug9kqg.apps.googleusercontent.com</code></p>
+        <p class="muted">Asegurate de agregar <code>http://localhost:5500</code> en Authorized JavaScript origins dentro de Google Cloud Console.</p>
+    </div>
+
+    <div id="g_id_onload"
+         data-client_id="764492983375-jql5ls5i2htbmmu6sfs9pqsrgaug9kqg.apps.googleusercontent.com"
+         data-context="signin"
+         data-ux_mode="popup"
+         data-callback="handleCredentialResponse"
+         data-auto_prompt="false">
+    </div>
+
+    <div class="g_id_signin"
+         data-type="standard"
+         data-shape="rectangular"
+         data-theme="outline"
+         data-text="signin_with"
+         data-size="large"
+         data-logo_alignment="left">
+    </div>
+
+    <div class="box">
+        <p><strong>id_token generado</strong></p>
+        <textarea id="tokenOutput" readonly placeholder="Aqui aparecera el id_token despues del login"></textarea>
+    </div>
+
+    <div class="box">
+        <p><strong>Payload decodificado</strong></p>
+        <pre id="payloadOutput">Todavia no hay payload.</pre>
+    </div>
+
+    <script>
+        function decodeJwtPayload(token) {
+            const parts = token.split('.');
+            if (parts.length < 2) {
+                return null;
+            }
+            const normalized = parts[1]
+                .replace(/-/g, '+')
+                .replace(/_/g, '/');
+            const padded = normalized + '='.repeat((4 - normalized.length % 4) % 4);
+            return JSON.parse(atob(padded));
+        }
+
+        function handleCredentialResponse(response) {
+            const token = response.credential;
+            document.getElementById('tokenOutput').value = token;
+            console.log('id_token:', token);
+
+            try {
+                const payload = decodeJwtPayload(token);
+                document.getElementById('payloadOutput').textContent = JSON.stringify(payload, null, 2);
+            } catch (error) {
+                document.getElementById('payloadOutput').textContent = 'No se pudo decodificar el payload: ' + error;
+            }
+        }
+    </script>
+</body>
+</html>
+

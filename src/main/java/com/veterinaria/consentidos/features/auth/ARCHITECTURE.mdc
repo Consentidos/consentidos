@@ -1,0 +1,162 @@
+---
+applyTo: "**/features/auth/**"
+---
+
+# Auth Feature Architecture Context
+
+## Purpose
+This file captures the architecture contract for `features/auth` so future prompts can use it as direct context without re-analyzing the module.
+
+## Scope
+- Feature root: `src/main/java/com/veterinaria/consentidos/features/auth`
+- Public HTTP base path: `/api/auth` (from `AuthController`)
+- Current status: structure is defined, endpoints and business logic are pending implementation.
+
+## Architectural Style
+- Vertical slice by feature (`auth`).
+- Layered + ports/adapters (hexagonal influence).
+- Dependency direction:
+  - `presentation -> application -> domain`
+  - `infrastructure` implements contracts declared by `domain`/`application`.
+  - `domain` must not depend on Spring or infrastructure details.
+
+## Module Structure and Responsibilities
+
+### 1) presentation
+Path: `presentation/controller`, `presentation/dto`
+
+Responsibilities:
+- Expose HTTP endpoints (`AuthController` under `/api/auth`).
+- Receive `request` DTOs and return `response` DTOs.
+- Validate incoming data and delegate to use cases.
+- Do not contain business rules.
+
+Expected artifacts:
+- `dto/request/*`: login/refresh/logout/register payloads.
+- `dto/response/*`: token/session/user projection payloads.
+
+### 2) application
+Path: `application/command`, `application/usecase`
+
+Responsibilities:
+- Define input contracts (commands).
+- Orchestrate auth flows as use cases.
+- Coordinate domain entities and repository ports.
+- Enforce app-level policies (transaction boundaries, idempotency decisions if needed).
+
+Expected artifacts:
+- `command/*`: immutable command models.
+- `usecase/*`: one class per operation (`LoginUseCase`, `RefreshTokenUseCase`, etc.).
+
+### 3) domain
+Path: `domain/entity`, `domain/repository`
+
+Responsibilities:
+- Core auth business rules and invariants.
+- Abstract repository ports.
+- Framework-agnostic, pure domain behavior.
+
+Expected artifacts:
+- `entity/*`: domain models (credentials/session/token aggregates or value objects).
+- `repository/*`: interfaces required by use cases/domain.
+
+### 4) infrastructure
+Path: `infrastructure/config`, `infrastructure/persistence/*`
+
+Responsibilities:
+- Implement technical details and external integrations.
+- Wire Spring beans/config.
+- Provide persistence adapters and data mapping.
+
+Persistence sub-areas:
+- `adapter/*`: implementations of repository ports.
+- `datasource/*`: JPA repositories, clients, or low-level data providers.
+- `dto/*`: persistence transport models.
+- `mapper/*`: domain <-> persistence mapping.
+
+## Request/Response and Cross-cutting Contracts
+
+### Global response shape
+`core/middleware/ResponseInterceptor` wraps non-string successful responses with:
+- `status`
+- `success`
+- `message`
+- `data`
+- `path`
+- `timestamp`
+
+Implication for Auth:
+- Controllers can return domain/DTO objects; interceptor standardizes response envelope.
+
+### Global error shape
+`core/middleware/ErrorHandler` handles validation/runtime/general exceptions with standard keys like:
+- `timestamp`
+- `status`
+- `error`
+- `message`
+- `path`
+- `errors` (for validation cases)
+
+Implication for Auth:
+- Prefer throwing meaningful exceptions from use cases/services and rely on global handling.
+
+### Correlation and logging
+`core/middleware/RequestInterceptor`:
+- Reads/generates `X-Correlation-ID`.
+- Adds it to response headers.
+- Logs request start/completion and execution time.
+
+Implication for Auth:
+- Keep logs correlation-aware in auth flows and external calls.
+
+## End-to-end Flow (Target)
+1. Client calls `/api/auth/*` endpoint.
+2. Controller validates request DTO and builds command.
+3. Use case executes auth logic with domain rules.
+4. Repository port is invoked.
+5. Infrastructure adapter resolves persistence/integration details.
+6. Use case returns result DTO/domain view.
+7. ResponseInterceptor wraps success response.
+8. ErrorHandler formats failures if exceptions occur.
+
+## Suggested Initial Endpoints (Not yet implemented)
+- `POST /api/auth/login`
+- `POST /api/auth/refresh`
+- `POST /api/auth/logout`
+- `POST /api/auth/register` (if product scope includes self-registration)
+
+## Guardrails for Future Changes
+- Keep controllers thin.
+- Keep business rules out of DTO mappers and adapters.
+- Avoid Spring annotations in domain entities unless strictly necessary.
+- Add tests per layer:
+  - controller tests for HTTP contract,
+  - use case tests for orchestration,
+  - repository adapter tests for persistence behavior.
+
+## Checklist for Adding a New Auth Operation
+1. Define request/response DTOs in `presentation/dto`.
+2. Add command model in `application/command`.
+3. Implement use case in `application/usecase`.
+4. Extend domain entities/rules if required.
+5. Add/extend repository port in `domain/repository`.
+6. Implement adapter/datasource/mapper in `infrastructure/persistence`.
+7. Expose endpoint in `AuthController`.
+8. Add tests in corresponding `src/test/.../features/auth/...` layer.
+
+## Current Known Gaps
+- `AuthController` exists but has no endpoints.
+- No visible auth commands/use cases/entities/ports implemented yet.
+- Token strategy (JWT/session/opaque token) is not specified in current code.
+- Security filter chain and authorization boundaries for auth routes are not documented yet.
+
+## Open Decisions to Resolve
+- Token format and lifecycle: JWT vs opaque tokens.
+- Refresh token persistence and revocation model.
+- Password hashing policy and credential rotation rules.
+- Audit requirements for login failures, lockouts, and suspicious activity.
+- Multi-device session policy and logout semantics.
+
+## Quick Context Snippet (for future prompts)
+"Auth feature follows layered hexagonal-style design: presentation (/api/auth) delegates to application use cases; domain holds rules and repository ports; infrastructure implements adapters/datasource/mappers; global middleware standardizes responses/errors and injects correlation IDs."
+
