@@ -3,13 +3,17 @@ package com.veterinaria.consentidos.features.auth.infrastructure.persistence.ada
 import com.veterinaria.consentidos.features.auth.domain.entity.AuthUser;
 import com.veterinaria.consentidos.features.auth.domain.repository.AuthUserRepository;
 import com.veterinaria.consentidos.features.auth.infrastructure.config.PreRegisteredUsersProperties;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
+@Profile("local & !external-storage")
 public class InMemoryAuthUserRepositoryAdapter implements AuthUserRepository {
 
     private final Map<String, AuthUser> byGoogleSub = new ConcurrentHashMap<>();
@@ -17,8 +21,9 @@ public class InMemoryAuthUserRepositoryAdapter implements AuthUserRepository {
 
     public InMemoryAuthUserRepositoryAdapter(PreRegisteredUsersProperties properties) {
         properties.getPreRegistered().forEach(user -> {
+            String userId = UUID.nameUUIDFromBytes(("auth-user:" + user.getGoogleSub()).getBytes(StandardCharsets.UTF_8)).toString();
             AuthUser authUser = new AuthUser(
-                user.getGoogleSub(),
+                userId,
                 user.getGoogleSub(),
                 user.getEmail(),
                 user.getDisplayName(),

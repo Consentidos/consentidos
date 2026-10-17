@@ -11,13 +11,16 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.List;
 
 @Component
 public class GoogleIdentityVerifierAdapter implements GoogleIdentityVerifier {
 
     private final GoogleIdTokenVerifier verifier;
+    private final GoogleAuthProperties properties;
 
     public GoogleIdentityVerifierAdapter(GoogleAuthProperties properties) {
+        this.properties = properties;
         this.verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), GsonFactory.getDefaultInstance())
             .setAudience(properties.getClientIds())
             .build();
@@ -33,7 +36,9 @@ public class GoogleIdentityVerifierAdapter implements GoogleIdentityVerifier {
 
             GoogleIdToken.Payload payload = token.getPayload();
 
-            // TODO: Optional tenant/domain restriction can be added here using payload.getHostedDomain().
+            if (!isDomainAllowed(payload.getHostedDomain(), payload.getEmail())) {
+                throw new SecurityException("Google account domain is not allowed");
+            }
 
             return new GoogleIdentity(
                 payload.getSubject(),
@@ -49,6 +54,32 @@ public class GoogleIdentityVerifierAdapter implements GoogleIdentityVerifier {
         } catch (GeneralSecurityException | IOException ex) {
             throw new SecurityException("Failed to verify Google id_token", ex);
         }
+    }
+
+    private boolean isDomainAllowed(String hostedDomain, String email) {
+        List<String> allowedDomains = properties.getAllowedDomains();
+        if (allowedDomains == null || allowedDomains.isEmpty()) {
+            return true;
+        }
+
+        String normalizedHostedDomain = normalizeDomain(hostedDomain);
+        String normalizedEmailDomain = extractEmailDomain(email);
+
+        return allowedDomains.stream()
+            .map(this::normalizeDomain)
+            .anyMatch(allowed -> allowed.equals(normalizedHostedDomain) || allowed.equals(normalizedEmailDomain));
+    }
+
+    private String extractEmailDomain(String email) {
+        if (email == null || email.isBlank() || !email.contains("@")) {
+            return "";
+        }
+
+        return normalizeDomain(email.substring(email.lastIndexOf('@') + 1));
+    }
+
+    private String normalizeDomain(String domain) {
+        return domain == null ? "" : domain.trim().toLowerCase();
     }
 }
 

@@ -56,6 +56,7 @@ class AuthControllerTest {
         when(loginWithGoogleUseCase.execute(any(LoginWithGoogleCommand.class))).thenReturn(pair);
 
         mockMvc.perform(post("/api/auth/login")
+                .header("X-Device-Id", "device-1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(new LoginBody("token"))))
             .andExpect(status().isOk())

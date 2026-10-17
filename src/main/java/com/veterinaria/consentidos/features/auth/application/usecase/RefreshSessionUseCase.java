@@ -43,6 +43,13 @@ public class RefreshSessionUseCase {
             throw new SecurityException("Refresh token expired");
         }
 
+        RefreshTokenSession activeSession = refreshTokenSessionRepository.findActiveByUserId(parsed.userId())
+            .orElseThrow(() -> new SecurityException("Refresh token already revoked"));
+
+        if (!activeSession.tokenId().equals(savedSession.tokenId())) {
+            throw new SecurityException("Refresh token already revoked");
+        }
+
         AuthUser user = authUserRepository.findActiveByUserId(parsed.userId())
             .orElseThrow(() -> new SecurityException("User is not active"));
 

@@ -9,6 +9,10 @@ public interface RefreshTokenSessionRepository {
 
     Optional<RefreshTokenSession> findByTokenId(String tokenId);
 
+    Optional<RefreshTokenSession> findActiveByUserId(String userId);
+
     void revoke(String tokenId, String reason);
+
+    void revokeByUserId(String userId, String reason);
 }
 

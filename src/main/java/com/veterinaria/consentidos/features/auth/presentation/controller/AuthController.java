@@ -13,8 +13,10 @@ import com.veterinaria.consentidos.features.auth.presentation.dto.request.Refres
 import com.veterinaria.consentidos.features.auth.presentation.dto.response.AuthTokenResponseDto;
 import com.veterinaria.consentidos.features.auth.presentation.dto.response.LogoutResponseDto;
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -37,8 +39,17 @@ public class AuthController {
 	}
 
 	@PostMapping("/login")
-	public AuthTokenResponseDto login(@Valid @RequestBody LoginRequestDto request) {
-		TokenPair tokenPair = loginWithGoogleUseCase.execute(new LoginWithGoogleCommand(request.idToken()));
+	public AuthTokenResponseDto login(
+		@Valid @RequestBody LoginRequestDto request,
+		@RequestHeader(value = "X-Device-Id", required = false) String deviceId,
+		HttpServletRequest servletRequest
+	) {
+		TokenPair tokenPair = loginWithGoogleUseCase.execute(new LoginWithGoogleCommand(
+			request.idToken(),
+			normalizeDeviceId(deviceId),
+			extractClientIp(servletRequest),
+			servletRequest.getHeader("User-Agent")
+		));
 		return toResponse(tokenPair);
 	}
 
@@ -69,5 +80,18 @@ public class AuthController {
 			tokenPair.refreshTokenExpiresAt(),
 			tokenPair.sessionId()
 		);
+	}
+
+	private String normalizeDeviceId(String deviceId) {
+		return deviceId == null || deviceId.isBlank() ? "unknown-device" : deviceId;
+	}
+
+	private String extractClientIp(HttpServletRequest request) {
+		String forwardedFor = request.getHeader("X-Forwarded-For");
+		if (forwardedFor != null && !forwardedFor.isBlank()) {
+			return forwardedFor.split(",")[0].trim();
+		}
+		String clientIp = request.getRemoteAddr();
+		return clientIp == null || clientIp.isBlank() ? "unknown-ip" : clientIp;
 	}
 }
