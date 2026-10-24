@@ -110,6 +110,27 @@ class ErrorHandlerTest {
         assertEquals("/test/path", body.get("path"));
         assertNotNull(body.get("timestamp"));
     }
+
+    @Test
+    @DisplayName("Should handle security exceptions correctly")
+    void testHandleSecurityException() {
+        // Arrange
+        SecurityException exception = new SecurityException("Invalid credentials");
+        when(webRequest.getDescription(false)).thenReturn("uri=/api/auth/login");
+
+        // Act
+        ResponseEntity<Map<String, Object>> response = errorHandler.handleSecurityException(exception, webRequest);
+
+        // Assert
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        Map<String, Object> body = response.getBody();
+        assertNotNull(body);
+        assertEquals(401, body.get("status"));
+        assertEquals("Unauthorized", body.get("error"));
+        assertEquals("Invalid credentials", body.get("message"));
+        assertEquals("/api/auth/login", body.get("path"));
+        assertNotNull(body.get("timestamp"));
+    }
     
     @Test
     @DisplayName("Should handle generic exceptions correctly")

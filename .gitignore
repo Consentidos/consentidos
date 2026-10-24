@@ -45,3 +45,4 @@ out/
 *.pem
 secrets/
 config/secrets.yml
+scripts/.generated/

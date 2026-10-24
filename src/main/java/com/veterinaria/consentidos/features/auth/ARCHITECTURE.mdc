@@ -1,0 +1,329 @@
+---
+applyTo: "**/features/auth/**"
+---
+
+# Auth Feature Architecture Context
+
+## Purpose
+This file captures the current architecture contract for `features/auth` so future prompts can use it as direct context without re-analyzing the module.
+
+## Scope
+- Feature root: `src/main/java/com/veterinaria/consentidos/features/auth`
+- Public HTTP base path: `/api/auth` from `AuthController`
+- Current status: login, refresh, and logout are implemented with Google ID tokens, JWT access/refresh tokens, Redis-backed session/attempt stores, and PostgreSQL-backed auth users in non-local profiles.
+- Local profile supports an opt-in `external-storage` override to run PostgreSQL + Redis in local too.
+
+## Architectural Style
+- Vertical slice by feature (`auth`)
+- Layered + ports/adapters (hexagonal influence)
+- Dependency direction:
+  - `presentation -> application -> domain`
+  - `infrastructure` implements contracts declared by `domain`
+  - `domain` does not depend on Spring or infrastructure details
+
+## Module Structure and Responsibilities
+
+### 1) presentation
+Path: `presentation/controller`, `presentation/dto`
+
+Responsibilities:
+- Expose HTTP endpoints under `/api/auth`
+- Receive request DTOs and return response DTOs
+- Validate incoming data and delegate to use cases
+- Keep business rules out of controllers
+
+Current artifacts:
+- `presentation/controller/AuthController`
+- `presentation/dto/request/LoginRequestDto`
+- `presentation/dto/request/RefreshTokenRequestDto`
+- `presentation/dto/request/LogoutRequestDto`
+- `presentation/dto/response/AuthTokenResponseDto`
+- `presentation/dto/response/LogoutResponseDto`
+
+Current endpoints:
+- `POST /api/auth/login`
+- `POST /api/auth/refresh`
+- `POST /api/auth/logout`
+
+Notes:
+- `AuthController` maps request DTOs to application commands
+- Login reads `X-Device-Id` and request metadata for login attempt tracking
+- `AuthController` returns DTOs directly; cross-cutting response wrapping is handled by global middleware
+
+### 2) application
+Path: `application/command`, `application/usecase`
+
+Responsibilities:
+- Define input commands for auth flows
+- Orchestrate authentication and session lifecycle
+- Coordinate domain entities and repository ports
+- Enforce use-case level rules
+
+Current artifacts:
+
+Commands:
+- `application/command/LoginWithGoogleCommand`
+- `application/command/RefreshSessionCommand`
+- `application/command/LogoutCommand`
+
+Use cases:
+- `application/usecase/LoginWithGoogleUseCase`
+- `application/usecase/RefreshSessionUseCase`
+- `application/usecase/LogoutUseCase`
+
+Behavior:
+- `LoginWithGoogleUseCase`
+  - verifies a Google `id_token`
+  - checks the configured Google domain allow-list
+  - applies login throttling and lockout state through `LoginAttemptRepository`
+  - finds an active pre-registered/user-row by Google subject
+  - revokes the previous active session for that user
+  - creates access and refresh JWTs
+  - persists refresh session state
+  - clears login-attempt state on success
+- `RefreshSessionUseCase`
+  - parses and validates the refresh token
+  - checks token session state
+  - ensures the token is still the active session for that user
+  - revokes rotated/expired tokens
+  - issues a new token pair
+- `LogoutUseCase`
+  - parses the refresh token
+  - revokes the corresponding refresh session
+
+### 3) domain
+Path: `domain/entity`, `domain/repository`
+
+Responsibilities:
+- Hold auth-related domain models and invariants
+- Declare repository and service ports
+- Remain framework-agnostic
+
+Current entities:
+- `domain/entity/AuthUser`
+- `domain/entity/GoogleIdentity`
+- `domain/entity/RefreshTokenSession`
+- `domain/entity/TokenPair`
+- `domain/entity/LoginAttemptState`
+- `domain/entity/LoginAttemptPolicy`
+
+Current repository/service ports:
+- `domain/repository/AuthUserRepository`
+- `domain/repository/GoogleIdentityVerifier`
+- `domain/repository/JwtTokenService`
+- `domain/repository/RefreshTokenSessionRepository`
+- `domain/repository/LoginAttemptRepository`
+
+Domain model notes:
+- `AuthUser` represents a local authenticated/pre-registered user
+- The canonical user identifier is now a UUID string (`userId`)
+- `RefreshTokenSession` tracks refresh token lifecycle and revocation state
+- `TokenPair` models issued access/refresh token output
+- `LoginAttemptState` tracks throttling state, window start, lockout, and metadata for login attempts
+
+### 4) infrastructure
+Path: `infrastructure/config`, `infrastructure/persistence/*`
+
+Responsibilities:
+- Provide concrete implementations of domain ports
+- Wire technical configuration and external integrations
+- Handle token signing/verification and persistence
+
+Current config classes:
+- `infrastructure/config/AuthTokenProperties`
+- `infrastructure/config/GoogleAuthProperties`
+- `infrastructure/config/RedisAuthProperties`
+- `infrastructure/config/AuthLoginAttemptProperties`
+- `infrastructure/config/LoginAttemptPolicyConfiguration`
+- `infrastructure/config/AuthRedisConfiguration`
+- `infrastructure/config/PreRegisteredUsersProperties`
+
+Current persistence adapters:
+- `infrastructure/persistence/adapter/GoogleIdentityVerifierAdapter`
+- `infrastructure/persistence/adapter/PostgresAuthUserRepositoryAdapter`
+- `infrastructure/persistence/adapter/RedisRefreshTokenSessionRepositoryAdapter`
+- `infrastructure/persistence/adapter/RedisLoginAttemptRepositoryAdapter`
+- `infrastructure/persistence/adapter/InMemoryAuthUserRepositoryAdapter`
+- `infrastructure/persistence/adapter/InMemoryRefreshTokenSessionRepositoryAdapter`
+- `infrastructure/persistence/adapter/InMemoryLoginAttemptRepositoryAdapter`
+- `infrastructure/persistence/adapter/JwtTokenServiceAdapter`
+
+Current persistence substructure:
+- `entity`: JPA auth-user entity
+- `repository`: Spring Data JPA repository for auth users
+- `adapter`: concrete implementations of domain ports
+
+### Infrastructure behavior
+
+#### `GoogleIdentityVerifierAdapter`
+- Uses Google verifier APIs to validate `id_token`
+- Converts Google payload into `GoogleIdentity`
+- Checks allowed Google domains when the allow-list is configured
+- Throws `SecurityException` on invalid or failed verification
+
+#### `PostgresAuthUserRepositoryAdapter`
+- Reads active auth users from PostgreSQL
+- Maps the DB row to the domain `AuthUser`
+- Supports lookup by Google subject and by user id
+
+#### `RedisRefreshTokenSessionRepositoryAdapter`
+- Stores refresh token sessions in Redis with TTL
+- Maintains the active refresh token per user for single-session enforcement
+- Supports save, lookup, and revoke
+- Revocation updates `revokedAt` and `revokedReason`
+
+#### `RedisLoginAttemptRepositoryAdapter`
+- Stores login-attempt counters and lockout metadata in Redis with TTL
+- Tracks attempts, window start, last attempt, device id, and hashed request metadata
+- Supports save, lookup, and clear
+
+#### `InMemoryAuthUserRepositoryAdapter`
+- Loads pre-registered users from `PreRegisteredUsersProperties`
+- Stores them in memory for the `local` profile
+- Supports lookup by Google subject and by user id
+- Returns only active users
+
+#### `InMemoryRefreshTokenSessionRepositoryAdapter`
+- Stores refresh token sessions in memory for the `local` profile
+- Supports save, lookup, active-session lookup, and revoke
+- Revocation updates `revokedAt` and `revokedReason`
+
+#### `InMemoryLoginAttemptRepositoryAdapter`
+- Stores login-attempt state in memory for the `local` profile
+- Supports save, lookup, and clear
+
+#### `JwtTokenServiceAdapter`
+- Creates RSA-signed JWT access tokens and refresh tokens
+- Parses refresh tokens and validates issuer/signature/type
+- Uses `AuthTokenProperties` for issuer, audience, TTLs, and RSA key material
+
+## Request/Response and Cross-cutting Contracts
+
+### Global response shape
+`core/middleware/ResponseInterceptor` currently returns non-string successful responses unchanged.
+`createErrorResponse(...)` exists for shared error-shape construction, but successful auth DTOs are not automatically wrapped in an envelope.
+
+Implication for Auth:
+- Controllers can return DTOs directly; clients should expect raw auth DTO payloads unless response wrapping is introduced in middleware later.
+
+### Global error shape
+`core/middleware/ErrorHandler` handles validation/runtime/general exceptions with standard keys like:
+- `timestamp`
+- `status`
+- `error`
+- `message`
+- `path`
+- `errors` for validation cases
+
+Implication for Auth:
+- Use cases and adapters can throw meaningful exceptions; global handling formats them.
+
+### Correlation and logging
+`core/middleware/RequestInterceptor`:
+- Reads or generates `X-Correlation-ID`
+- Adds it to response headers
+- Logs request start/completion and execution time
+
+Implication for Auth:
+- Keep logs correlation-aware in auth flows and external calls.
+
+## End-to-end Flow
+1. Client calls `/api/auth/login`, `/api/auth/refresh`, or `/api/auth/logout`
+2. Controller validates request DTO and builds a command
+3. Use case executes auth logic
+4. Use case invokes repository/service ports
+5. Infrastructure adapter performs verification, JWT signing, Redis persistence, or PostgreSQL lookup
+6. Use case returns a result DTO/domain view
+7. `ResponseInterceptor` passes successful auth DTOs through as-is
+8. `ErrorHandler` formats failures if exceptions occur
+
+## Current Auth Flow Details
+
+### Login with Google
+- Input: Google `id_token`
+- Verification: `GoogleIdentityVerifier`
+- Throttling: `LoginAttemptRepository`
+- User lookup: `AuthUserRepository.findActiveByGoogleSub`
+- Single-session enforcement: `RefreshTokenSessionRepository.revokeByUserId`
+- Token generation: `JwtTokenService.createAccessToken` and `createRefreshToken`
+- Session persistence: `RefreshTokenSessionRepository.save`
+- Success cleanup: `LoginAttemptRepository.clear`
+
+### Refresh session
+- Input: refresh token
+- Parsing: `JwtTokenService.parseRefreshToken`
+- Session lookup: `RefreshTokenSessionRepository.findByTokenId`
+- Active session verification: `RefreshTokenSessionRepository.findActiveByUserId`
+- Revocation on expired or rotated token
+- New token pair issuance with a new refresh token id
+
+### Logout
+- Input: refresh token
+- Parsing: `JwtTokenService.parseRefreshToken`
+- Session validation: `RefreshTokenSessionRepository.findByTokenId` must resolve a non-revoked session
+- Revocation: `RefreshTokenSessionRepository.revoke`
+
+## Current Token Strategy
+- JWT is used for both access and refresh tokens
+- Tokens are RSA-signed using configured private/public key PEM values
+- Access token claims include:
+  - token id
+  - subject
+  - issuer
+  - audience
+  - issued/expiration timestamps
+  - token type
+  - session id
+  - Google subject
+  - email
+  - placeholder roles/scopes
+- Refresh token claims include:
+  - token id
+  - subject
+  - issuer
+  - audience
+  - issued/expiration timestamps
+  - token type
+  - session id
+
+## Current User Strategy
+- Authentication is limited to pre-registered users in `local` and PostgreSQL-backed users in non-local profiles
+- `PreRegisteredUsersProperties` holds the local allow-list
+- A user is considered valid only if their Google subject matches and they are active
+
+## Guardrails for Future Changes
+- Keep controllers thin
+- Keep business rules out of DTOs and adapters
+- Avoid Spring annotations in domain entities unless required
+- Prefer throwing meaningful exceptions and letting global error handling format them
+- Keep token/session policy changes isolated to use cases, domain ports, and adapters
+
+## Testing Guidance
+- Controller tests for HTTP contract
+- Use case tests for orchestration and rules
+- Adapter tests for Google verification, JWT behavior, Redis TTL/session behavior, and in-memory session storage
+
+## Checklist for Adding a New Auth Operation
+1. Define request/response DTOs in `presentation/dto`
+2. Add command model in `application/command`
+3. Implement use case in `application/usecase`
+4. Extend domain entities/rules if required
+5. Add or extend repository/service ports in `domain/repository`
+6. Implement adapter/configuration in `infrastructure`
+7. Expose endpoint in `AuthController`
+8. Add tests in the corresponding `src/test/.../features/auth/...` layer
+
+## Current Known Gaps
+- Roles/permissions and `/me` endpoint remain future work
+- Logout-all remains future work
+- Audit/logging integration still depends on the wider application’s observability strategy
+- Persistence strategy for the rest of the auth ecosystem can still evolve
+
+## Open Decisions to Resolve
+- RBAC model and claims strategy
+- Logout-all semantics
+- Audit requirements for login failures and suspicious activity
+- Whether to move more auth metadata to PostgreSQL later
+
+## Quick Context Snippet
+"Auth feature currently implements Google login, JWT access/refresh token issuance, refresh rotation, single-session enforcement, and logout revocation. Presentation maps HTTP requests to application commands; domain defines users, sessions, login attempts, and token ports; infrastructure provides Google verification, JWT signing/parsing, Redis-backed sessions/attempts, and PostgreSQL-backed auth users in non-local profiles."
