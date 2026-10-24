@@ -48,7 +48,7 @@ public class RedisLoginAttemptRepositoryAdapter extends AbstractLoginAttemptRepo
     }
 
     @Override
-      public void registerFailure(
+    public void registerFailure(
         String key,
         String userHint,
         String deviceId,
@@ -65,20 +65,20 @@ public class RedisLoginAttemptRepositoryAdapter extends AbstractLoginAttemptRepo
         Instant blockedUntil = attempts >= policy.maxAttempts() ? now.plus(policy.lockout()) : null;
         Instant expiresAt = blockedUntil != null ? blockedUntil : windowStartedAt.plus(policy.window());
 
-            LoginAttemptState state = buildState(
-              key,
-              userHint,
-              deviceId,
-              clientIp,
-              userAgent,
-              attempts,
-              windowStartedAt,
-              now,
-              blockedUntil,
-              expiresAt
-            );
+        LoginAttemptState state = buildState(new LoginAttemptBuildInput(
+            key,
+            userHint,
+            deviceId,
+            clientIp,
+            userAgent,
+            attempts,
+            windowStartedAt,
+            now,
+            blockedUntil,
+            expiresAt
+        ));
 
-            commands.hset(redisKey(key), toStorageMap(state));
+        commands.hset(redisKey(key), toStorageMap(state));
         commands.expire(redisKey(key), ttlSeconds(state.expiresAt()));
     }
 

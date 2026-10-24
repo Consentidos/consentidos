@@ -1,22 +1,33 @@
 package com.veterinaria.consentidos.features.auth.infrastructure.config;
 
 import lombok.Getter;
-import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import org.springframework.boot.context.properties.bind.DefaultValue;
 
-@Setter
 @Getter
-@Component
 @ConfigurationProperties(prefix = "auth.token")
 public class AuthTokenProperties {
 
-    private String issuer = "consentidos-auth";
-    private String audience = "consentidos-web";
-    private long accessTtlSeconds = 900;
-    private long refreshTtlSeconds = 604800;
-    private String privateKeyPem;
-    private String publicKeyPem;
+    private final String issuer;
+    private final String audience;
+    private final long accessTtlSeconds;
+    private final long refreshTtlSeconds;
+    private final String privateKeyPem;
+    private final String publicKeyPem;
 
+    public AuthTokenProperties(
+        @DefaultValue("consentidos-auth") String issuer,
+        @DefaultValue("consentidos-web") String audience,
+        @DefaultValue("900") long accessTtlSeconds,
+        @DefaultValue("604800") long refreshTtlSeconds,
+        @DefaultValue("") String privateKeyPem,
+        @DefaultValue("") String publicKeyPem
+    ) {
+        this.issuer = issuer;
+        this.audience = audience;
+        this.accessTtlSeconds = accessTtlSeconds;
+        this.refreshTtlSeconds = refreshTtlSeconds;
+        this.privateKeyPem = privateKeyPem;
+        this.publicKeyPem = publicKeyPem;
+    }
 }
-

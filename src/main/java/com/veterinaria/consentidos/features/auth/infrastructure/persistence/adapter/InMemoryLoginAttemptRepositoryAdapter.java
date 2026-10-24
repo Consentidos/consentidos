@@ -33,7 +33,7 @@ public class InMemoryLoginAttemptRepositoryAdapter extends AbstractLoginAttemptR
     }
 
     @Override
-      public void registerFailure(
+    public void registerFailure(
         String key,
         String userHint,
         String deviceId,
@@ -41,14 +41,14 @@ public class InMemoryLoginAttemptRepositoryAdapter extends AbstractLoginAttemptR
         String userAgent,
         LoginAttemptPolicy policy
     ) {
-            Instant now = Instant.now();
-            attempts.compute(key, (currentKey, current) -> {
+        Instant now = Instant.now();
+        attempts.compute(key, (currentKey, current) -> {
             Instant windowStartedAt = current == null || current.isExpired(now) ? now : current.windowStartedAt();
             int count = current == null || current.isExpired(now) ? 1 : current.attempts() + 1;
             Instant blockedUntil = count >= policy.maxAttempts() ? now.plus(policy.lockout()) : null;
             Instant expiresAt = blockedUntil != null ? blockedUntil : windowStartedAt.plus(policy.window());
 
-              return buildState(
+            return buildState(new LoginAttemptBuildInput(
                 currentKey,
                 userHint,
                 deviceId,
@@ -59,7 +59,7 @@ public class InMemoryLoginAttemptRepositoryAdapter extends AbstractLoginAttemptR
                 now,
                 blockedUntil,
                 expiresAt
-            );
+            ));
         });
     }
 
@@ -69,5 +69,3 @@ public class InMemoryLoginAttemptRepositoryAdapter extends AbstractLoginAttemptR
     }
 
 }
-
-

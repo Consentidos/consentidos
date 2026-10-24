@@ -1,23 +1,39 @@
 package com.veterinaria.consentidos.features.auth.infrastructure.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 import lombok.Getter;
-import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.bind.DefaultValue;
 
-@Component
 @Getter
-@Setter
 @ConfigurationProperties(prefix = "auth.redis")
 public class RedisAuthProperties {
 
-    private String host;
-    private int port = 6379;
-    private String username = "default";
-    private String password;
-    private boolean ssl = true;
-    private int database = 0;
-    private long timeoutSeconds = 10;
-    private String keyPrefix = "consentidos:auth";
-}
+    private final String host;
+    private final int port;
+    private final String username;
+    private final String password;
+    private final boolean ssl;
+    private final int database;
+    private final long timeoutSeconds;
+    private final String keyPrefix;
 
+    public RedisAuthProperties(
+        @DefaultValue("") String host,
+        @DefaultValue("6379") int port,
+        @DefaultValue("default") String username,
+        @DefaultValue("") String password,
+        @DefaultValue("true") boolean ssl,
+        @DefaultValue("0") int database,
+        @DefaultValue("10") long timeoutSeconds,
+        @DefaultValue("consentidos:auth") String keyPrefix
+    ) {
+        this.host = host;
+        this.port = port;
+        this.username = username;
+        this.password = password;
+        this.ssl = ssl;
+        this.database = database;
+        this.timeoutSeconds = timeoutSeconds;
+        this.keyPrefix = keyPrefix;
+    }
+}

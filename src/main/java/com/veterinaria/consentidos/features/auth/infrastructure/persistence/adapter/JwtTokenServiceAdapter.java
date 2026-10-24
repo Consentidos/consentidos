@@ -5,7 +5,6 @@ import com.veterinaria.consentidos.features.auth.domain.repository.JwtTokenServi
 import com.veterinaria.consentidos.features.auth.infrastructure.config.AuthTokenProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.SignatureException;
 import org.springframework.stereotype.Component;
 
 import java.security.KeyFactory;
@@ -59,7 +58,7 @@ public class JwtTokenServiceAdapter implements JwtTokenService {
             .claim(CLAIM_SESSION_ID, sessionId)
             .claim("google_sub", user.googleSub())
             .claim("email", user.email())
-            // TODO: replace static roles/scopes once RBAC tables are available.
+            // Roles/scopes stay empty until RBAC claims are introduced.
             .claim("roles", List.of())
             .claim("scope", List.of())
             .signWith(cachedPrivateKey.get(), Jwts.SIG.RS256)
@@ -113,8 +112,6 @@ public class JwtTokenServiceAdapter implements JwtTokenService {
                 tokenId,
                 claims.getExpiration().toInstant()
             );
-        } catch (SignatureException | IllegalArgumentException ex) {
-            throw new SecurityException("Invalid refresh token", ex);
         } catch (RuntimeException ex) {
             throw new SecurityException("Invalid refresh token", ex);
         }
@@ -153,3 +150,4 @@ public class JwtTokenServiceAdapter implements JwtTokenService {
             .replaceAll("\\s", "");
     }
 }
+

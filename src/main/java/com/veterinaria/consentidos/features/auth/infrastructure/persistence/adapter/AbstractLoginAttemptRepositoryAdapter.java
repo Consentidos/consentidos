@@ -11,7 +11,7 @@ import java.util.Map;
 
 abstract class AbstractLoginAttemptRepositoryAdapter {
 
-    protected LoginAttemptState buildState(
+    protected record LoginAttemptBuildInput(
         String key,
         String userHint,
         String deviceId,
@@ -23,17 +23,20 @@ abstract class AbstractLoginAttemptRepositoryAdapter {
         Instant blockedUntil,
         Instant expiresAt
     ) {
+    }
+
+    protected LoginAttemptState buildState(LoginAttemptBuildInput input) {
         return new LoginAttemptState(
-            key,
-            userHint,
-            deviceId,
-            hashMetadata(clientIp),
-            hashMetadata(userAgent),
-            attempts,
-            windowStartedAt,
-            lastAttemptAt,
-            blockedUntil,
-            expiresAt
+            input.key(),
+            input.userHint(),
+            input.deviceId(),
+            hashMetadata(input.clientIp()),
+            hashMetadata(input.userAgent()),
+            input.attempts(),
+            input.windowStartedAt(),
+            input.lastAttemptAt(),
+            input.blockedUntil(),
+            input.expiresAt()
         );
     }
 
@@ -85,4 +88,3 @@ abstract class AbstractLoginAttemptRepositoryAdapter {
         }
     }
 }
-

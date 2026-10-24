@@ -65,12 +65,6 @@ public class AuthController {
 		return new LogoutResponseDto("Session closed successfully");
 	}
 
-	// TODO: Future endpoint for RBAC retrieval from authenticated user context.
-	// @GetMapping("/me")
-	// public MeResponseDto me(Authentication authentication) {
-	//     return ...; // Resolve user roles/permissions with caching strategy (e.g., Redis).
-	// }
-
 	private AuthTokenResponseDto toResponse(TokenPair tokenPair) {
 		return new AuthTokenResponseDto(
 			tokenPair.tokenType(),
