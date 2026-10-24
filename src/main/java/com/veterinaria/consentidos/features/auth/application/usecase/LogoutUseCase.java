@@ -21,7 +21,10 @@ public class LogoutUseCase {
 
     public void execute(LogoutCommand command) {
         JwtTokenService.ParsedRefreshToken parsed = jwtTokenService.parseRefreshToken(command.refreshToken());
+        refreshTokenSessionRepository.findByTokenId(parsed.tokenId())
+            .filter(session -> session.revokedAt() == null)
+            .orElseThrow(() -> new SecurityException("Invalid refresh token"));
+
         refreshTokenSessionRepository.revoke(parsed.tokenId(), "logout");
     }
 }
-

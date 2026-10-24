@@ -18,6 +18,9 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import jakarta.annotation.PostConstruct;
+
+import java.util.concurrent.atomic.AtomicReference;
 
 @Component
 public class JwtTokenServiceAdapter implements JwtTokenService {
@@ -26,9 +29,17 @@ public class JwtTokenServiceAdapter implements JwtTokenService {
     private static final String CLAIM_SESSION_ID = "sid";
 
     private final AuthTokenProperties properties;
+    private final AtomicReference<PrivateKey> cachedPrivateKey = new AtomicReference<>();
+    private final AtomicReference<PublicKey> cachedPublicKey = new AtomicReference<>();
 
     public JwtTokenServiceAdapter(AuthTokenProperties properties) {
         this.properties = properties;
+    }
+
+    @PostConstruct
+    void initKeyCache() {
+        cachedPrivateKey.set(parsePrivateKey(properties.getPrivateKeyPem()));
+        cachedPublicKey.set(parsePublicKey(properties.getPublicKeyPem()));
     }
 
     @Override
@@ -51,7 +62,7 @@ public class JwtTokenServiceAdapter implements JwtTokenService {
             // TODO: replace static roles/scopes once RBAC tables are available.
             .claim("roles", List.of())
             .claim("scope", List.of())
-            .signWith(parsePrivateKey(properties.getPrivateKeyPem()), Jwts.SIG.RS256)
+            .signWith(cachedPrivateKey.get(), Jwts.SIG.RS256)
             .compact();
 
         return new SignedToken(token, expiresAt, tokenId);
@@ -71,7 +82,7 @@ public class JwtTokenServiceAdapter implements JwtTokenService {
             .expiration(Date.from(expiresAt))
             .claim(CLAIM_TYPE, "refresh")
             .claim(CLAIM_SESSION_ID, sessionId)
-            .signWith(parsePrivateKey(properties.getPrivateKeyPem()), Jwts.SIG.RS256)
+            .signWith(cachedPrivateKey.get(), Jwts.SIG.RS256)
             .compact();
 
         return new SignedToken(token, expiresAt, tokenId);
@@ -81,7 +92,7 @@ public class JwtTokenServiceAdapter implements JwtTokenService {
     public ParsedRefreshToken parseRefreshToken(String refreshToken) {
         try {
             Claims claims = Jwts.parser()
-                .verifyWith(parsePublicKey(properties.getPublicKeyPem()))
+                .verifyWith(cachedPublicKey.get())
                 .requireIssuer(properties.getIssuer())
                 .build()
                 .parseSignedClaims(refreshToken)
@@ -142,5 +153,3 @@ public class JwtTokenServiceAdapter implements JwtTokenService {
             .replaceAll("\\s", "");
     }
 }
-
-

@@ -200,16 +200,11 @@ Current persistence substructure:
 ## Request/Response and Cross-cutting Contracts
 
 ### Global response shape
-`core/middleware/ResponseInterceptor` wraps non-string successful responses with:
-- `status`
-- `success`
-- `message`
-- `data`
-- `path`
-- `timestamp`
+`core/middleware/ResponseInterceptor` currently returns non-string successful responses unchanged.
+`createErrorResponse(...)` exists for shared error-shape construction, but successful auth DTOs are not automatically wrapped in an envelope.
 
 Implication for Auth:
-- Controllers can return DTOs directly; the interceptor standardizes the response envelope.
+- Controllers can return DTOs directly; clients should expect raw auth DTO payloads unless response wrapping is introduced in middleware later.
 
 ### Global error shape
 `core/middleware/ErrorHandler` handles validation/runtime/general exceptions with standard keys like:
@@ -239,7 +234,7 @@ Implication for Auth:
 4. Use case invokes repository/service ports
 5. Infrastructure adapter performs verification, JWT signing, Redis persistence, or PostgreSQL lookup
 6. Use case returns a result DTO/domain view
-7. `ResponseInterceptor` wraps successful responses
+7. `ResponseInterceptor` passes successful auth DTOs through as-is
 8. `ErrorHandler` formats failures if exceptions occur
 
 ## Current Auth Flow Details
@@ -265,6 +260,7 @@ Implication for Auth:
 ### Logout
 - Input: refresh token
 - Parsing: `JwtTokenService.parseRefreshToken`
+- Session validation: `RefreshTokenSessionRepository.findByTokenId` must resolve a non-revoked session
 - Revocation: `RefreshTokenSessionRepository.revoke`
 
 ## Current Token Strategy
